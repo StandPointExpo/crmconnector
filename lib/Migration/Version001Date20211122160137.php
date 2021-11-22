@@ -39,7 +39,7 @@ class Version001Date20211122160137 extends SimpleMigrationStep {
 	 */
 	public function changeSchema(IOutput $output, Closure $schemaClosure, array $options): ?ISchemaWrapper {
         /** @var ISchemaWrapper $schema */
-        $schema = $schemaClosure;
+        $schema = $schemaClosure();
         $table = $schema->createTable(CrmConnectorMapper::CRM_CONNECTOR_TABLE_SHARE_NAME);
 
         $table->addColumn('id', \OCP\DB\Types::BIGINT, [
@@ -90,9 +90,13 @@ class Version001Date20211122160137 extends SimpleMigrationStep {
 	 * @param array $options
 	 */
 	public function postSchemaChange(IOutput $output, Closure $schemaClosure, array $options): void {
+
         $query = $this->connection->getQueryBuilder();
-        $query->update('crm_connector_users')
-            ->set('user_id', 'id');
+        $query->update(CrmConnectorMapper::CRM_CONNECTOR_TABLE_SHARE_NAME)
+            ->set('crm_user_id', 'id');
+
+        $query->update(CrmConnectorMapper::CRM_CONNECTOR_TABLE_SHARE_NAME)
+            ->set('fileid', 'fileid');
         $query->execute();
 	}
 }

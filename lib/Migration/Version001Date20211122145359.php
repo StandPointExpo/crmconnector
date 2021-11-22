@@ -34,7 +34,7 @@ class Version001Date20211122145359 extends SimpleMigrationStep
     public function changeSchema(IOutput $output, Closure $schemaClosure, array $options): ?ISchemaWrapper
     {
         /** @var ISchemaWrapper $schema */
-        $schema = $schemaClosure;
+        $schema = $schemaClosure();
         $table = $schema->createTable(CrmConnectorMapper::CRM_CONNECTOR_TABLE_TOKENS_NAME);
 
         $table->addColumn('id', \OCP\DB\Types::BIGINT, [
@@ -43,7 +43,7 @@ class Version001Date20211122145359 extends SimpleMigrationStep
             'length' => 8,
         ]);
 
-        $table->addColumn('user_id', \OCP\DB\Types::BIGINT, [
+        $table->addColumn('crm_user_id', \OCP\DB\Types::BIGINT, [
             'notnull' => true,
             'length' => 8
         ]);
@@ -57,7 +57,7 @@ class Version001Date20211122145359 extends SimpleMigrationStep
         ]);
 
         $table->setPrimaryKey(['id']);
-        $table->addIndex(['id', 'user_id'], CrmConnectorMapper::CRM_CONNECTOR_TABLE_TOKENS_NAME . '_id_user_id' );
+        $table->addIndex(['id', 'crm_user_id'], CrmConnectorMapper::CRM_CONNECTOR_TABLE_TOKENS_NAME . '_id_crm_user_id' );
         $table->addIndex(['token'], CrmConnectorMapper::CRM_CONNECTOR_TABLE_TOKENS_NAME . '_token' );
 
         return $schema;
@@ -71,8 +71,8 @@ class Version001Date20211122145359 extends SimpleMigrationStep
     public function postSchemaChange(IOutput $output, Closure $schemaClosure, array $options): void
     {
         $query = $this->connection->getQueryBuilder();
-        $query->update('crm_connector_users')
-            ->set('user_id', 'id');
+        $query->update(CrmConnectorMapper::CRM_CONNECTOR_TABLE_USERS_NAME)
+            ->set('crm_user_id', 'id');
         $query->execute();
     }
 }
