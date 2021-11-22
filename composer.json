@@ -1,0 +1,15 @@
+{
+    "name": "Crm Files Connector",
+    "description": "Cam files connector",
+    "type": "project",
+    "license": "AGPL",
+    "authors": [
+        {
+            "name": "Drammer"
+        }
+    ],
+    "require": {},
+    "require-dev": {
+        "phpunit/phpunit": "^5.4"
+    }
+}
