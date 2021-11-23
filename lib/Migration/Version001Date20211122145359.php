@@ -6,6 +6,7 @@ namespace OCA\CrmConnector\Migration;
 
 use Closure;
 use OCA\CrmConnector\Db\CrmConnectorMapper;
+use OCA\CrmConnector\Db\CrmConnectorTypes;
 use OCP\DB\ISchemaWrapper;
 use OCP\IDBConnection;
 use OCP\Migration\IOutput;
@@ -17,48 +18,49 @@ use OCP\Migration\SimpleMigrationStep;
 class Version001Date20211122145359 extends SimpleMigrationStep
 {
 
-    /** @var IDBConnection */
-    protected $connection;
-
-    public function __construct(IDBConnection $connection)
-    {
-        $this->connection = $connection;
-    }
-
     /**
      * @param IOutput $output
      * @param Closure $schemaClosure The `\Closure` returns a `ISchemaWrapper`
      * @param array $options
      * @return null|ISchemaWrapper
+     * @throws \Doctrine\DBAL\Schema\SchemaException
      */
     public function changeSchema(IOutput $output, Closure $schemaClosure, array $options): ?ISchemaWrapper
     {
         /** @var ISchemaWrapper $schema */
         $schema = $schemaClosure();
-        $table = $schema->createTable(CrmConnectorMapper::CRM_CONNECTOR_TABLE_TOKENS_NAME);
+        $table = $schema->createTable(CrmConnectorTypes::CRM_CONNECTOR_TABLE_TOKENS_NAME);
 
-        $table->addColumn('id', \OCP\DB\Types::BIGINT, [
+        $table->addColumn('id', CrmConnectorTypes::BIGINT, [
             'autoincrement' => true,
             'notnull' => true,
             'length' => 8,
         ]);
 
-        $table->addColumn('crm_user_id', \OCP\DB\Types::BIGINT, [
+        $table->addColumn('user_id', CrmConnectorTypes::BIGINT, [
             'notnull' => true,
             'length' => 8
         ]);
 
-        $table->addColumn('token', \OCP\DB\Types::TEXT, [
+        $table->addColumn('token', CrmConnectorTypes::TEXT, [
             'notnull' => true
         ]);
 
-        $table->addColumn('last_used_at', \OCP\DB\Types::DATETIME, [
+        $table->addColumn('last_used_at', CrmConnectorTypes::DATETIME, [
             'notnull' => false
         ]);
 
         $table->setPrimaryKey(['id']);
-        $table->addIndex(['id', 'crm_user_id'], CrmConnectorMapper::CRM_CONNECTOR_TABLE_TOKENS_NAME . '_id_crm_user_id' );
-        $table->addIndex(['token'], CrmConnectorMapper::CRM_CONNECTOR_TABLE_TOKENS_NAME . '_token' );
+        $table->addIndex(['id', 'user_id'], CrmConnectorTypes::CRM_CONNECTOR_TABLE_TOKENS_NAME . '_id_user_id' );
+
+        if ($schema->hasTable(CrmConnectorTypes::CRM_CONNECTOR_TABLE_USERS_NAME)) {
+            $table->addForeignKeyConstraint(
+                $schema->getTable(CrmConnectorTypes::CRM_CONNECTOR_TABLE_USERS_NAME),
+                ['user_id'],
+                ['id'],
+                [],
+                'fk_user_id_' . CrmConnectorTypes::CRM_CONNECTOR_TABLE_TOKENS_NAME);
+        }
 
         return $schema;
     }
@@ -70,9 +72,5 @@ class Version001Date20211122145359 extends SimpleMigrationStep
      */
     public function postSchemaChange(IOutput $output, Closure $schemaClosure, array $options): void
     {
-        $query = $this->connection->getQueryBuilder();
-        $query->update(CrmConnectorMapper::CRM_CONNECTOR_TABLE_USERS_NAME)
-            ->set('crm_user_id', 'id');
-        $query->execute();
     }
 }

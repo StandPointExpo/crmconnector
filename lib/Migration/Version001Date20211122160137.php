@@ -6,6 +6,7 @@ namespace OCA\CrmConnector\Migration;
 
 use Closure;
 use OCA\CrmConnector\Db\CrmConnectorMapper;
+use OCA\CrmConnector\Db\CrmConnectorTypes;
 use OCP\DB\ISchemaWrapper;
 use OCP\IDBConnection;
 use OCP\Migration\IOutput;
@@ -16,13 +17,6 @@ use OCP\Migration\SimpleMigrationStep;
  */
 class Version001Date20211122160137 extends SimpleMigrationStep {
 
-    /** @var IDBConnection */
-    protected $connection;
-
-    public function __construct(IDBConnection $connection)
-    {
-        $this->connection = $connection;
-    }
 	/**
 	 * @param IOutput $output
 	 * @param Closure $schemaClosure The `\Closure` returns a `ISchemaWrapper`
@@ -31,55 +25,76 @@ class Version001Date20211122160137 extends SimpleMigrationStep {
 	public function preSchemaChange(IOutput $output, Closure $schemaClosure, array $options): void {
 	}
 
-	/**
-	 * @param IOutput $output
-	 * @param Closure $schemaClosure The `\Closure` returns a `ISchemaWrapper`
-	 * @param array $options
-	 * @return null|ISchemaWrapper
-	 */
+    /**
+     * @param IOutput $output
+     * @param Closure $schemaClosure The `\Closure` returns a `ISchemaWrapper`
+     * @param array $options
+     * @return null|ISchemaWrapper
+     * @throws \Doctrine\DBAL\Schema\SchemaException
+     */
 	public function changeSchema(IOutput $output, Closure $schemaClosure, array $options): ?ISchemaWrapper {
+
         /** @var ISchemaWrapper $schema */
         $schema = $schemaClosure();
-        $table = $schema->createTable(CrmConnectorMapper::CRM_CONNECTOR_TABLE_SHARE_NAME);
+        $table = $schema->createTable(CrmConnectorTypes::CRM_CONNECTOR_TABLE_SHARE_NAME);
 
-        $table->addColumn('id', \OCP\DB\Types::BIGINT, [
+        $table->addColumn('id', CrmConnectorTypes::BIGINT, [
             'autoincrement' => true,
             'notnull' => true,
             'length' => 8,
         ]);
 
-        $table->addColumn('crm_user_id', \OCP\DB\Types::BIGINT, [
+        $table->addColumn('user_id', CrmConnectorTypes::BIGINT, [
             'notnull' => true,
             'length' => 8
         ]);
 
-        $table->addColumn('fileid', \OCP\DB\Types::BIGINT, [
+        $table->addColumn('fileid', CrmConnectorTypes::BIGINT, [
             'notnull' => true,
             'length' => 8
         ]);
 
-        $table->addColumn('crm_file_uuid', \OCP\DB\Types::STRING, [
+        $table->addColumn('crm_file_uuid', CrmConnectorTypes::STRING, [
             'notnull' => true,
             'length' => 64
         ]);
 
-        $table->addColumn('share_token', \OCP\DB\Types::STRING, [
+        $table->addColumn('share_token', CrmConnectorTypes::STRING, [
             'notnull' => true,
             'length' => 255,
         ]);
 
-        $table->addColumn('created_at', \OCP\DB\Types::DATETIME, [
+        $table->addColumn('created_at', CrmConnectorTypes::DATETIME, [
             'notnull' => false,
             'default' => null
         ]);
 
-        $table->addColumn('updated_at', \OCP\DB\Types::DATETIME, [
+        $table->addColumn('updated_at', CrmConnectorTypes::DATETIME, [
             'notnull' => false,
             'default' => null
         ]);
 
         $table->setPrimaryKey(['id']);
-        $table->addIndex(['fileid'], CrmConnectorMapper::CRM_CONNECTOR_TABLE_SHARE_NAME . '_fileid' );
+        $table->addIndex(['user_id'], CrmConnectorTypes::CRM_CONNECTOR_TABLE_SHARE_NAME . 'user_id' );
+        $table->addIndex(['fileid'], CrmConnectorTypes::CRM_CONNECTOR_TABLE_SHARE_NAME . '_fileid' );
+
+        if ($schema->hasTable(CrmConnectorTypes::CRM_CONNECTOR_TABLE_USERS_NAME)) {
+            $table->addForeignKeyConstraint(
+                $schema->getTable(CrmConnectorTypes::CRM_CONNECTOR_TABLE_USERS_NAME),
+                ['user_id'],
+                ['id'],
+                [],
+                'fk_user_id_' . CrmConnectorTypes::CRM_CONNECTOR_TABLE_SHARE_NAME);
+        }
+
+        if ($schema->hasTable(CrmConnectorTypes::OCA_TABLE_FILECACHE_NAME)) {
+            $table->addForeignKeyConstraint(
+                $schema->getTable(CrmConnectorTypes::OCA_TABLE_FILECACHE_NAME),
+                ['fileid'],
+                ['fileid'],
+                [],
+                'fk_fileid_' . CrmConnectorTypes::CRM_CONNECTOR_TABLE_SHARE_NAME);
+        }
 
         return $schema;
 	}
@@ -91,12 +106,5 @@ class Version001Date20211122160137 extends SimpleMigrationStep {
 	 */
 	public function postSchemaChange(IOutput $output, Closure $schemaClosure, array $options): void {
 
-        $query = $this->connection->getQueryBuilder();
-        $query->update(CrmConnectorMapper::CRM_CONNECTOR_TABLE_SHARE_NAME)
-            ->set('crm_user_id', 'id');
-
-        $query->update(CrmConnectorMapper::CRM_CONNECTOR_TABLE_SHARE_NAME)
-            ->set('fileid', 'fileid');
-        $query->execute();
 	}
 }
