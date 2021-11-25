@@ -172,10 +172,10 @@ class CrmFileController extends PublicShareController
      */
     public function upload(): FileReceive
     {
+
         $reciever = new FileReceive($this->request);
         if($reciever->isUploaded());
-        var_dump($reciever->getUploadedFile());
-        die();
+            $reciever->getUploadedFile();
         return $reciever;
     }
 

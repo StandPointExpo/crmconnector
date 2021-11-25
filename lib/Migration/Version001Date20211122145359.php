@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace OCA\CrmConnector\Migration;
 
 use Closure;
-use OCA\CrmConnector\Db\CrmConnectorMapper;
+use OCA\CrmConnector\Db\CrmFileMapper;
 use OCA\CrmConnector\Db\CrmConnectorTypes;
 use OCP\DB\ISchemaWrapper;
 use OCP\IDBConnection;
