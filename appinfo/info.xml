@@ -14,6 +14,23 @@
     <dependencies>
         <nextcloud min-version="15" max-version="15"/>
     </dependencies>
+    <repair-steps>
+        <pre-migration>
+            <step>OCA\DAV\Migration\Classification</step> Add migrations and seeds
+        </pre-migration>
+        <post-migration>
+            <step>OCA\DAV\Migration\Classification</step>
+        </post-migration>
+        <live-migration>
+            <step>OCA\DAV\Migration\GenerateBirthdays</step>
+        </live-migration>
+        <install>
+            <step>OCA\DAV\Migration\GenerateBirthdays</step>
+        </install>
+        <uninstall>
+            <step>OCA\DAV\Migration\GenerateBirthdays</step>
+        </uninstall>
+    </repair-steps>
     <navigations>
         <navigation>
             <name>Crm Files Connector</name>

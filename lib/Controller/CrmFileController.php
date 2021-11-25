@@ -3,9 +3,11 @@
 namespace OCA\CrmConnector\Controller;
 
 use OCP\AppFramework\PublicShareController;
+use OCP\Files\IRootFolder;
 use OCP\IConfig;
 use OCP\IRequest;
 use OCP\ISession;
+use OCP\Files\IAppData;
 
 /**
  * This is the implementation of the server side part of
@@ -41,14 +43,30 @@ class CrmFileController extends PublicShareController
 
     /** @var IRequest */
     public $request;
+    /**
+     * @var IRootFolder
+     */
+    private $storage;
 
-    public function __construct(string $appName, IRequest $request, ISession $session, IConfig $config)
+    /** @var IAppData */
+    private $appData;
+
+    public function __construct(
+        string $appName,
+        IRequest $request,
+        ISession $session,
+        IConfig $config,
+        IRootFolder $storage,
+        IAppData $appData)
     {
+//        $userFolder = $this->storage->getUserFolder('myUser');
         parent::__construct($appName, $request, $session);
+        $this->storage = $storage;
         $this->uploadsDir = $config->getSystemValue('datadirectory', \OC::$SERVERROOT . '/data');
         $this->projectsDir = '';
         $this->appName = $appName;
         $this->request = $request;
+        $this->appData = $appData; //https://docs.nextcloud.com/server/latest/developer_manual/basics/storage/appdata.html
     }
 
     /**
