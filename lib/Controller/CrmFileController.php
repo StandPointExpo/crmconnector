@@ -2,6 +2,7 @@
 
 namespace OCA\CrmConnector\Controller;
 
+use OCA\CrmConnector\Migration\SeedsStep;
 use OCP\AppFramework\PublicShareController;
 use OCP\Files\IRootFolder;
 use OCP\IConfig;
@@ -51,13 +52,16 @@ class CrmFileController extends PublicShareController
     /** @var IAppData */
     private $appData;
 
+    private SeedsStep $seedsStep;
+    private mixed $files;
+
     public function __construct(
         string $appName,
         IRequest $request,
         ISession $session,
         IConfig $config,
         IRootFolder $storage,
-        IAppData $appData)
+        IAppData $appData, SeedsStep $seedsStep)
     {
 //        $userFolder = $this->storage->getUserFolder('myUser');
         parent::__construct($appName, $request, $session);
@@ -172,7 +176,6 @@ class CrmFileController extends PublicShareController
      */
     public function upload(): FileReceive
     {
-
         $reciever = new FileReceive($this->request);
         if($reciever->isUploaded());
             $reciever->getUploadedFile();

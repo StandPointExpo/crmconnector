@@ -20,7 +20,7 @@ class CrmFileService
     /**
      * @param array $dataFile
      */
-    public function addFile(array $dataFile) {
+    public function create(array $dataFile) {
         $file = new CrmFile();
         $file->setId($dataFile['id']);
         $file->setUserId($dataFile['user_id']);
