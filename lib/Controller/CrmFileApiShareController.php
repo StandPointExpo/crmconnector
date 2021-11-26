@@ -6,7 +6,7 @@ use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\AppFramework\Controller;
 
-class CrmFileShareController extends Controller {
+class CrmFileApiShareController extends Controller {
 
 	private $userId;
 

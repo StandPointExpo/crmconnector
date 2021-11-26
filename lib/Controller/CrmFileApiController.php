@@ -2,13 +2,16 @@
 
 namespace OCA\CrmConnector\Controller;
 
+use OC\IntegrityCheck\Exceptions\InvalidSignatureException;
 use OCA\CrmConnector\Migration\SeedsStep;
+use OCA\CrmConnector\Requests\CrmFileRequest;
 use OCP\AppFramework\PublicShareController;
 use OCP\Files\IRootFolder;
 use OCP\IConfig;
 use OCP\IRequest;
 use OCP\ISession;
 use OCP\Files\IAppData;
+use OCA\CrmConnector\Response\CrmConnectionResponse;
 
 /**
  * This is the implementation of the server side part of
@@ -29,9 +32,10 @@ use OCP\Files\IAppData;
  * @editor Bivek Joshi (http://www.bivekjoshi.com.np)
  * @email meetbivek@gmail.com
  */
-class CrmFileController extends PublicShareController
+class CrmFileApiController extends PublicShareController
 {
 
+    use CrmConnectionResponse;
     /**
      * @var string
      */
@@ -42,8 +46,6 @@ class CrmFileController extends PublicShareController
      */
     private $projectsDir;
 
-    /** @var IRequest */
-    public $request;
     /**
      * @var IRootFolder
      */
@@ -53,7 +55,10 @@ class CrmFileController extends PublicShareController
     private $appData;
 
     private SeedsStep $seedsStep;
+
     private mixed $files;
+
+    private CrmFileRequest $crmFileRequest;
 
     public function __construct(
         string $appName,
@@ -61,15 +66,17 @@ class CrmFileController extends PublicShareController
         ISession $session,
         IConfig $config,
         IRootFolder $storage,
-        IAppData $appData, SeedsStep $seedsStep)
+        IAppData $appData,
+        CrmFileRequest $crmFileRequest)
     {
+        $this->request = $request;
 //        $userFolder = $this->storage->getUserFolder('myUser');
         parent::__construct($appName, $request, $session);
         $this->storage = $storage;
         $this->uploadsDir = $config->getSystemValue('datadirectory', \OC::$SERVERROOT . '/data');
         $this->projectsDir = '';
         $this->appName = $appName;
-        $this->request = $request;
+        $this->crmFileRequest = $crmFileRequest;
         $this->appData = $appData; //https://docs.nextcloud.com/server/latest/developer_manual/basics/storage/appdata.html
     }
 
@@ -172,14 +179,20 @@ class CrmFileController extends PublicShareController
      * @NoAdminRequired
      * @NoCSRFRequired
      * @PublicPage
-     *
+     * @throws InvalidSignatureException
      */
-    public function upload(): FileReceive
+    public function upload()
     {
-        $reciever = new FileReceive($this->request);
-        if($reciever->isUploaded());
-            $reciever->getUploadedFile();
-        return $reciever;
+        try {
+            $this->crmFileRequest->validate();
+            $reciever = new FileReceive($this->request);
+            if ($reciever->isUploaded()) {
+                $reciever->uploadedFileMove();
+            };
+//            return $reciever;
+        }catch (\Throwable $exception) {
+            return $this->fail($exception);
+        }
     }
 
     /**

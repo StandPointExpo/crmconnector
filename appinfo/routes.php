@@ -9,9 +9,9 @@
  */
 return [
     'routes' => [
-	   ['name' => 'CrmFile#index', 'url' => '/api/v1/crm-files', 'verb' => 'GET'],
-	   ['name' => 'CrmFile#upload', 'url' => '/api/v1/crm-files', 'verb' => 'POST'],
-	   ['name' => 'CrmFile#download', 'url' => '/api/v1/crm-files/{uuid}', 'verb' => 'GET'],
+	   ['name' => 'CrmFileApi#index', 'url' => '/api/v1/crm-files', 'verb' => 'GET'],
+	   ['name' => 'CrmFileApi#upload', 'url' => '/api/v1/crm-files', 'verb' => 'POST'],
+	   ['name' => 'CrmFileApi#download', 'url' => '/api/v1/crm-files/{uuid}', 'verb' => 'GET'],
 //	   ['name' => 'page#index', 'url' => '/', 'verb' => 'GET'],
 //	   ['name' => 'page#do_echo', 'url' => '/echo', 'verb' => 'POST'],
     ]

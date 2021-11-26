@@ -65,6 +65,80 @@ class CrmFile extends Entity
     /** @var mixed */
     protected $updatedAt;
 
+    public const IMAGE_EXT = ['JPG', 'jpg', 'jpeg', 'png', 'gif', 'tiff'];
+
+    public const DOCUMENT_EXT = [
+        'doc',
+        'docx',
+        'dot',
+        'pdf',
+        'odt',
+        'xlt',
+        'dwg',
+        'xls',
+        'xml',
+        'xlsx',
+        'xlsm',
+        'xltm',
+        'txt',
+        'ods',
+        'docm',
+        'dotx',
+        'dotm',
+        'wpd',
+        'wps',
+        'csv',
+        'ppt',
+        'pps',
+        'pot',
+        'pptx',
+        'pptm',
+        'potx',
+        'potm',
+        'sxw',
+        'stw',
+        'sxc',
+        'stc',
+        'xlw',
+        'cdr',
+        'eps',
+        'tif',
+        'xsd',
+        'dwg',
+        'ai',
+        'tiff',
+        'cdr',
+        'eps',
+        'ai',
+        'tif',
+        'psd',
+        'svg',
+        //Archives
+        '7z',
+        'zip',
+        'ace',
+        'arj',
+        'cab',
+        'cbr',
+        'gz',
+        'gzip',
+        'pkg',
+        'sit',
+        'spl',
+        'tar',
+        'tar-gz',
+        'tgz',
+        'xar',
+        'zipx',
+        'rar',
+        'rpm'
+    ];
+
+    const PROJECT_DOCUMENT_EXT = ['doc', 'docx', 'pdf', 'odt', 'zip'];
+    const PROJECT_AUDIO_EXT = ['mp3', 'ogg', 'mpga'];
+    const PROJECT_VIDEO_EXT = ['mp4', 'mpeg'];
+
+
     public function __construct()
     {
         $this->addType('userId', 'integer');
@@ -78,6 +152,17 @@ class CrmFile extends Entity
         $this->addType('deletedAt', 'string');
         $this->addType('createdAt', 'string');
         $this->addType('updatedAt', 'string');
+    }
+
+    public function validExtensions()
+    {
+        return array_merge(
+            CrmFile::IMAGE_EXT,
+            CrmFile::DOCUMENT_EXT,
+            CrmFile::PROJECT_DOCUMENT_EXT,
+            CrmFile::PROJECT_AUDIO_EXT,
+            CrmFile::PROJECT_VIDEO_EXT
+        );
     }
 
     /**

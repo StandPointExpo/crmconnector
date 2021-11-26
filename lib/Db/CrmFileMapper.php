@@ -38,4 +38,34 @@ class CrmFileMapper extends QBMapper
             'updated_at' => $row['updated_at']
         ]);
     }
+    /**
+     * @param string $ext
+     * @return string
+     * @throws FileExtException
+     */
+    public function getType($file): ?string
+    {
+        $ext = mb_strtolower($file->getClientOriginalExtension());
+
+        if (in_array($ext, CrmFile::IMAGE_EXT)) {
+            return 'image';
+        }
+
+        if (in_array($ext, CrmFile::PROJECT_AUDIO_EXT)) {
+            return 'audio';
+        }
+
+        if (in_array($ext, CrmFile::PROJECT_VIDEO_EXT)) {
+            return 'video';
+        }
+
+        if (in_array($ext, CrmFile::PROJECT_DOCUMENT_EXT)) {
+            return 'document';
+        }
+
+        if (in_array($ext, CrmFile::DOCUMENT_EXT)) {
+            return 'file';
+        }
+        throw new FileExtException($file->getClientOriginalName());
+    }
 }

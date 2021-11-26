@@ -93,8 +93,8 @@ class FileReceive
         }
     }
 
-    //TODO доробити првернення файлу після скачування
-    public function getUploadedFile()
+    //TODO доробити перенесення файлу після скачування
+    public function uploadedFileMove()
     {
 
     }
