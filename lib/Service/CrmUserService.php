@@ -3,24 +3,33 @@
 namespace OCA\CrmConnector\Service;
 
 use OCP\IConfig;
+use OCP\IRequest;
 
 class CrmUserService
 {
-    private $config;
+    private IConfig $config;
     private $appName;
+    private IRequest $request;
 
-    public function __construct(IConfig $config, $appName){
-        var_dump($config);
-        die();
+    public function __construct(IConfig $config, $appName, IRequest $request)
+    {
         $this->config = $config;
         $this->appName = $appName;
+        $this->request = $request;
     }
 
-    public function getUserValue($key, $userId) {
+    public function getCrmUser(): string
+    {
+        return $this->request->getHeader('Authorization');
+    }
+
+    public function getUserValue($key, $userId): string
+    {
         return $this->config->getUserValue($userId, $this->appName, $key);
     }
 
-    public function setUserValue($key, $userId, $value) {
+    public function setUserValue($key, $userId, $value)
+    {
         $this->config->setUserValue($userId, $this->appName, $key, $value);
     }
 }
