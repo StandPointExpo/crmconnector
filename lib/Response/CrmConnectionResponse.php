@@ -25,8 +25,9 @@ trait CrmConnectionResponse
     public function fail($exception): JSONResponse
     {
         $fail = [
+            'success' => false,
             'error' => [
-                'status' => $exception->getCode(),
+                'code' => $exception->getCode(),
                 'message' => $exception->getMessage()
             ]
         ];
