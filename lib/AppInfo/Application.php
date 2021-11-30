@@ -4,12 +4,16 @@ namespace OCA\CrmConnector\AppInfo;
 
 use OCA\CrmConnector\Service\CrmUserService;
 use OCP\AppFramework\App;
+use OCP\AppFramework\Bootstrap\IBootContext;
+use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
-use OCP\IRequest;
+use OCP\AppFramework\IAppContainer;
 
-class Application extends App
+class Application extends App implements IBootstrap
 {
+
     public const APP_ID = 'crmconnector';
+    private IAppContainer $container;
 
     /**
      * Define your dependencies in here
@@ -17,28 +21,18 @@ class Application extends App
     public function __construct(array $urlParams = array())
     {
         parent::__construct(self::APP_ID, $urlParams);
-        $container = $this->getContainer();
-
-        /**
-         * Controllers
-         */
-
-        $crmUserService = $container->get(CrmUserService::class);
-
-        var_dump($crmUserService->getCrmUser());
-        die();
-
-
+        $this->container = $this->getContainer();
     }
-//
-//    public function register(IRegistrationContext $context): void
-//    {
-//
-//        /**
-//         * Middleware
-//         */
-//        $context->registerService('CrmUserService', function ($c) {
-//            return new CrmUserService();
-//        });
-//    }
+
+    public function register(IRegistrationContext $context): void
+    {
+        $crmUserService = $this->container->get(CrmUserService::class);
+        var_dump($crmUserService->activeCrmUser());
+        die();
+    }
+
+    public function boot(IBootContext $context): void
+    {
+        // TODO: Implement boot() method.
+    }
 }

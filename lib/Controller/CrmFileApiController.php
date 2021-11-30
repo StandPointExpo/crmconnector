@@ -11,7 +11,7 @@ use OCP\IConfig;
 use OCP\IRequest;
 use OCP\ISession;
 use OCP\Files\IAppData;
-use OCA\CrmConnector\Response\CrmConnectionResponse;
+use OCA\CrmConnector\Traits\CrmConnectionResponse;
 
 /**
  * This is the implementation of the server side part of
@@ -96,7 +96,6 @@ class CrmFileApiController extends PublicShareController
     public function isValidToken(): bool
     {
         return $this->getToken() === 'secretToken';
-//        return $this->getToken() === 'secretToken';
     }
 
     /**

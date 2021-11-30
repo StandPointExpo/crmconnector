@@ -1,6 +1,6 @@
 <?php
 
-namespace OCA\CrmConnector\Response;
+namespace OCA\CrmConnector\Traits;
 
 use OCP\AppFramework\Http\JSONResponse;
 
