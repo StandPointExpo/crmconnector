@@ -2,6 +2,9 @@
 
 namespace OCA\CrmConnector\Service;
 
+use OCA\CrmConnector\Db\CrmUser;
+use OCA\CrmConnector\Db\CrmUserMapper;
+use OCP\DB\Exception;
 use OCP\IConfig;
 use OCP\IRequest;
 
@@ -10,12 +13,14 @@ class CrmUserService
     private IConfig $config;
     private $appName;
     private IRequest $request;
+    private CrmUserMapper $crmUserMapper;
 
-    public function __construct(IConfig $config, $appName, IRequest $request)
+    public function __construct(IConfig $config, $appName, IRequest $request, CrmUserMapper $crmUserMapper)
     {
         $this->config = $config;
         $this->appName = $appName;
         $this->request = $request;
+        $this->crmUserMapper = $crmUserMapper;
     }
 
     /**
@@ -23,12 +28,8 @@ class CrmUserService
      */
     public function activeCrmUser(): array
     {
-
-        $user = $this->getCrmUser();
-        //отріматі актівного корістувача и записати дани в базу для подальшої обробки
-        // написати модель для запису користувача
-        var_dump($user);
-        die();
+        $userData = $this->getCrmUser();
+        $this->insertOrUpdateUser($userData);
     }
 
     /**
@@ -66,7 +67,7 @@ class CrmUserService
             $errno = curl_errno($cApiConnection);
             $error = curl_error($cApiConnection);
             curl_close($cApiConnection);
-            if($errno > 0) {
+            if ($errno > 0) {
                 throw new \Exception("CURL Error ($errno): $error");
             }
 
@@ -86,5 +87,20 @@ class CrmUserService
     public function setUserValue($key, $userId, $value)
     {
         $this->config->setUserValue($userId, $this->appName, $key, $value);
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function insertOrUpdateUser(array $userData)
+    {
+        $user = new CrmUser();
+        $user->setId($userData['id']);
+        $user->setName($userData['name']);
+        $user->setEmail($userData['email']);
+        $user->setCreatedAt(date('Y-m-d H:i:s', time()));
+        $user->setUpdatedAt(date('Y-m-d H:i:s', time()));
+
+        $this->crmUserMapper->insertUser($user);
     }
 }

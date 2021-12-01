@@ -2,6 +2,8 @@
 
 namespace OCA\CrmConnector\Controller;
 
+use OCP\Files\IRootFolder;
+use OCP\IConfig;
 use OCP\IRequest;
 
 class FileReceive
@@ -32,9 +34,23 @@ class FileReceive
      */
     private $uploadedFile;
 
-    public function __construct(IRequest $request)
+    private IRootFolder $storage;
+    /**
+     * @var mixed
+     */
+    private $uploadsDir;
+
+    private string $projectsDir;
+
+    public function __construct(IRequest $request,
+                                IConfig $config,
+                                IRootFolder $storage)
     {
         $this->uploadedFile = null;
+        $this->storage = $storage;
+        $this->projectsDir = '';
+        //        $userFolder = $this->storage->getUserFolder('myUser');
+        $this->uploadsDir = $config->getSystemValue('datadirectory', \OC::$SERVERROOT . '/data');
         if ($request->getMethod() === 'GET') {
 
             $this->fileName = trim($request->getParam('resumableFilename'));
@@ -94,7 +110,7 @@ class FileReceive
     }
 
     //TODO доробити перенесення файлу після скачування
-    public function uploadedFileMove()
+    public function uploadedFileMove($sourceDir)
     {
 
     }
@@ -190,5 +206,49 @@ class FileReceive
                 return false;
             }
         }
+    }
+
+
+    /**
+     * Move uploaded file to projects dir and remove $temp_dir
+     * @param string $temp_dir
+     * @param string $fileName
+     * @param $projectName
+     * @param $foldersTree
+     * @return string $uploadedFilePath
+     */
+    public function moveFile(string $temp_dir, string $fileName, $projectName, $foldersTree)
+    {
+        $uploadedFilePath = '';
+        mkdir($this->uploadsDir);
+//        $this->makeFileDir();
+        if (copy("$temp_dir/$fileName", "$this->uploadsDir/$fileName")) {
+            $this->_log('copy file');
+        } else {
+            $this->_log('not copy');
+        };
+        // rename the temporary directory (to avoid access from other
+        // concurrent chunks uploads) and that delete it
+        if (rename($temp_dir, $temp_dir . '_UNUSED')) {
+            $this->rrmdir($temp_dir . '_UNUSED');
+        } else {
+            $this->rrmdir($temp_dir);
+        }
+        return $uploadedFilePath;
+    }
+
+    public function makeFileDir($projectName, $folderTree)
+    {
+        $foldersThree = json_decode($folderTree);
+    }
+
+    /**
+     * Create valid folders three for uploaded file
+     * @param array $folderThree
+     * @return string
+     */
+    public function foldersThreeString(array $folderThree): string
+    {
+        return implode('/', $folderThree);
     }
 }

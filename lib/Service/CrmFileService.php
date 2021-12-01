@@ -4,13 +4,14 @@ namespace OCA\CrmConnector\Service;
 
 use OCA\CrmConnector\Db\CrmFile;
 use OCA\CrmConnector\Db\CrmFileMapper;
+use OCP\DB\Exception;
 
 class CrmFileService
 {
     /**
      * @var CrmFileMapper
      */
-    private $crmFileMapper;
+    private CrmFileMapper $crmFileMapper;
 
     public function __construct(CrmFileMapper $crmFileMapper)
     {
@@ -19,6 +20,7 @@ class CrmFileService
 
     /**
      * @param array $dataFile
+     * @throws Exception
      */
     public function create(array $dataFile) {
         $file = new CrmFile();
