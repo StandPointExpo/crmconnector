@@ -137,7 +137,7 @@ class CrmFileApiController extends PublicShareController
     public function upload()
     {
         try {
-            Доробити закачування файла з переносом в актівну папку проекту
+//            Доробити закачування файла з переносом в актівну папку проекту
             $this->crmFileRequest->validate();
             $reciever = new FileReceive($this->request);
             if ($reciever->isUploaded()) {

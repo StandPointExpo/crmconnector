@@ -27,8 +27,7 @@ class Application extends App implements IBootstrap
     public function register(IRegistrationContext $context): void
     {
         $crmUserService = $this->container->get(CrmUserService::class);
-        var_dump($crmUserService->activeCrmUser());
-        die();
+        $crmUserService->activeCrmUser();
     }
 
     public function boot(IBootContext $context): void

@@ -51,6 +51,8 @@ class FileReceive
         $this->projectsDir = '';
         //        $userFolder = $this->storage->getUserFolder('myUser');
         $this->uploadsDir = $config->getSystemValue('datadirectory', \OC::$SERVERROOT . '/data');
+        var_dump($this->uploadsDir);
+        die();
         if ($request->getMethod() === 'GET') {
 
             $this->fileName = trim($request->getParam('resumableFilename'));

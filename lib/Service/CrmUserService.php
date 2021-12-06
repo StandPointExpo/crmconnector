@@ -30,6 +30,7 @@ class CrmUserService
     {
         $userData = $this->getCrmUser();
         $this->insertOrUpdateUser($userData);
+        return $userData;
     }
 
     /**
@@ -37,7 +38,6 @@ class CrmUserService
      */
     public function getCrmUser(): array
     {
-
         return $this->curlApiResource($this->request->getHeader('Authorization'));
     }
 
