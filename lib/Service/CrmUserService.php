@@ -3,7 +3,8 @@
 namespace OCA\CrmConnector\Service;
 
 use OCA\CrmConnector\Db\CrmUser;
-use OCA\CrmConnector\Db\CrmUserMapper;
+use OCA\CrmConnector\Exception\UserException;
+use OCA\CrmConnector\Mapper\CrmUserMapper;
 use OCP\DB\Exception;
 use OCP\IConfig;
 use OCP\IRequest;
@@ -49,6 +50,9 @@ class CrmUserService
         try {
             $computeApi = $this->config->getSystemValue('compute_api');
             if ($computeApi === '') {
+                /**
+                 * Set compute_api url to backend server api, where get active user data
+                 * */
                 throw new \Exception('Please set compute_api url on config.php');
             }
             $cApiConnection = curl_init($computeApi . '/api/auth/user');
@@ -72,6 +76,10 @@ class CrmUserService
             }
 
             $data = json_decode($response, true);
+
+            if (!$data['status'] && !isset($data['data']['id'])) {
+                throw new UserException();
+            }
             return $data['data'];
         } catch (\Throwable $exception) {
             throw new \Exception($exception->getMessage());
@@ -101,6 +109,6 @@ class CrmUserService
         $user->setCreatedAt(date('Y-m-d H:i:s', time()));
         $user->setUpdatedAt(date('Y-m-d H:i:s', time()));
 
-        $this->crmUserMapper->insertUser($user);
+        $this->crmUserMapper->insertOrUpdate($user);
     }
 }

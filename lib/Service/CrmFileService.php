@@ -3,7 +3,8 @@
 namespace OCA\CrmConnector\Service;
 
 use OCA\CrmConnector\Db\CrmFile;
-use OCA\CrmConnector\Db\CrmFileMapper;
+use OCA\CrmConnector\Mapper\CrmFileMapper;
+use OCP\AppFramework\Db\Entity;
 use OCP\DB\Exception;
 
 class CrmFileService
@@ -22,7 +23,8 @@ class CrmFileService
      * @param array $dataFile
      * @throws Exception
      */
-    public function create(array $dataFile) {
+    public function create(array $dataFile): Entity
+    {
         $file = new CrmFile();
         $file->setId($dataFile['id']);
         $file->setUserId($dataFile['user_id']);
@@ -37,7 +39,7 @@ class CrmFileService
         $file->setCreatedAt($dataFile['created_at']);
         $file->setUpdatedAt($dataFile['updated_at']);
 
-        $this->crmFileMapper->insertFile($file);
+        return $this->crmFileMapper->insertFile($file);
     }
 
 }

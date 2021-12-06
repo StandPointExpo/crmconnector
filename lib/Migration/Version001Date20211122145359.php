@@ -27,7 +27,6 @@ class Version001Date20211122145359 extends SimpleMigrationStep
      */
     public function changeSchema(IOutput $output, Closure $schemaClosure, array $options): ?ISchemaWrapper
     {
-        return null;
         /** @var ISchemaWrapper $schema */
         $schema = $schemaClosure();
         $table = $schema->createTable(CrmConnectorTypes::CRM_CONNECTOR_TABLE_TOKENS_NAME);

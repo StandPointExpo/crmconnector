@@ -2,6 +2,7 @@
 
 namespace OCA\CrmConnector\Db;
 
+use OCA\CrmConnector\Exception\FileExtException;
 use OCP\AppFramework\Db\Entity;
 
 /**
@@ -137,6 +138,7 @@ class CrmFile extends Entity
     const PROJECT_DOCUMENT_EXT = ['doc', 'docx', 'pdf', 'odt', 'zip'];
     const PROJECT_AUDIO_EXT = ['mp3', 'ogg', 'mpga'];
     const PROJECT_VIDEO_EXT = ['mp4', 'mpeg'];
+    const USERNAME_STORAGE = 'admin';
 
 
     public function __construct()
@@ -157,12 +159,51 @@ class CrmFile extends Entity
     public function validExtensions()
     {
         return array_merge(
-            CrmFile::IMAGE_EXT,
-            CrmFile::DOCUMENT_EXT,
-            CrmFile::PROJECT_DOCUMENT_EXT,
-            CrmFile::PROJECT_AUDIO_EXT,
-            CrmFile::PROJECT_VIDEO_EXT
+            self::IMAGE_EXT,
+            self::DOCUMENT_EXT,
+            self::PROJECT_DOCUMENT_EXT,
+            self::PROJECT_AUDIO_EXT,
+            self::PROJECT_VIDEO_EXT
         );
+    }
+
+    /**
+     * @param $resumableFilename
+     * @return string
+     */
+    public function getExt($resumableFilename): ?string
+    {
+        return pathinfo($resumableFilename, PATHINFO_EXTENSION);
+    }
+
+    /**
+     * @param $resumableFilename
+     * @return string
+     */
+    public function getType($resumableFilename): ?string
+    {
+        $ext = self::getExt($resumableFilename);
+
+        if (in_array($ext, self::IMAGE_EXT)) {
+            return 'image';
+        }
+
+        if (in_array($ext, self::PROJECT_AUDIO_EXT)) {
+            return 'audio';
+        }
+
+        if (in_array($ext, self::PROJECT_VIDEO_EXT)) {
+            return 'video';
+        }
+
+        if (in_array($ext, self::PROJECT_DOCUMENT_EXT)) {
+            return 'document';
+        }
+
+        if (in_array($ext, self::DOCUMENT_EXT)) {
+            return 'file';
+        }
+        throw new FileExtException($resumableFilename);
     }
 
     /**

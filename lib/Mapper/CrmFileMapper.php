@@ -1,7 +1,9 @@
 <?php
 
-namespace OCA\CrmConnector\Db;
+namespace OCA\CrmConnector\Mapper;
 
+use OCA\CrmConnector\Db\CrmConnectorTypes;
+use OCA\CrmConnector\Db\CrmFile;
 use OCA\CrmConnector\Exception\FileExtException;
 use OCP\AppFramework\Db\Entity;
 use \OCP\AppFramework\Db\QBMapper;
@@ -24,6 +26,21 @@ class CrmFileMapper extends QBMapper
         return parent::insert($entity);
     }
 
+    /**
+     * @throws Exception
+     */
+    public function getFile(int $id) {
+        $db = $this->db->getQueryBuilder();
+        $result = $db->select('*')
+            ->from($this->getTableName())
+            ->where(
+                $db->expr()->eq('id', $db->createNamedParameter($id, 'integer'))
+            )->execute();
+        $fetch = $result->fetch();
+        $result->closeCursor();
+        return $fetch;
+    }
+
     public function createFileFromRow(array $row): CrmFile
     {
         return $this->mapRowToEntity([
@@ -39,35 +56,5 @@ class CrmFileMapper extends QBMapper
             'created_at' => $row['created_at'],
             'updated_at' => $row['updated_at']
         ]);
-    }
-
-    /**
-     * @param $file
-     * @return string
-     */
-    public function getType($file): ?string
-    {
-        $ext = mb_strtolower($file->getClientOriginalExtension());
-
-        if (in_array($ext, CrmFile::IMAGE_EXT)) {
-            return 'image';
-        }
-
-        if (in_array($ext, CrmFile::PROJECT_AUDIO_EXT)) {
-            return 'audio';
-        }
-
-        if (in_array($ext, CrmFile::PROJECT_VIDEO_EXT)) {
-            return 'video';
-        }
-
-        if (in_array($ext, CrmFile::PROJECT_DOCUMENT_EXT)) {
-            return 'document';
-        }
-
-        if (in_array($ext, CrmFile::DOCUMENT_EXT)) {
-            return 'file';
-        }
-        throw new FileExtException($file->getClientOriginalName());
     }
 }

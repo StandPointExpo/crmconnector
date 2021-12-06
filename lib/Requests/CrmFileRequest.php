@@ -2,10 +2,10 @@
 
 namespace OCA\CrmConnector\Requests;
 
-use OC\IntegrityCheck\Exceptions\InvalidSignatureException;
 use OCA\CrmConnector\Db\CrmFile;
 use OCA\CrmConnector\Exception\FileException;
 use OCA\CrmConnector\Exception\FileExtException;
+use OCA\CrmConnector\Middleware\CrmUserMiddleware;
 use OCP\IRequest;
 use SplFileInfo;
 
@@ -13,7 +13,11 @@ class CrmFileRequest
 {
     private $request;
     private CrmFile $crmFile;
+    private CrmUserMiddleware $middleware;
 
+    /**
+     * @throws \Exception
+     */
     public function __construct(IRequest $request, CrmFile $crmFile)
     {
         $this->request = $request;
@@ -22,8 +26,9 @@ class CrmFileRequest
 
 
     /**
+     * @throws \Exception
      */
-    public function validate (): bool
+    public function validate (): IRequest
     {
         $file = $this->request->getUploadedFile('file');
 
@@ -36,6 +41,6 @@ class CrmFileRequest
             throw new FileExtException( $file['name'] );
         }
 
-        return true;
+        return $this->request;
     }
 }

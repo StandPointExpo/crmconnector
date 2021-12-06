@@ -2,6 +2,7 @@
 
 namespace OCA\CrmConnector\AppInfo;
 
+use OCA\CrmConnector\Service\CrmTokenService;
 use OCA\CrmConnector\Service\CrmUserService;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
@@ -27,7 +28,9 @@ class Application extends App implements IBootstrap
     public function register(IRegistrationContext $context): void
     {
         $crmUserService = $this->container->get(CrmUserService::class);
-        $crmUserService->activeCrmUser();
+        $user = $crmUserService->activeCrmUser();
+        $crmTokenService = $this->container->get(CrmTokenService::class);
+        $crmTokenService->saveToken($user);
     }
 
     public function boot(IBootContext $context): void

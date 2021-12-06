@@ -5,7 +5,7 @@ namespace OCA\CrmConnector\Exception;
 class FileExtException extends \InvalidArgumentException
 {
     const REASON = "File data incorrect";
-    const CODE = 412;
+    const CODE = 415;
 
     public function __construct(string $file)
     {

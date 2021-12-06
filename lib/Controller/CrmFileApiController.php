@@ -2,9 +2,13 @@
 
 namespace OCA\CrmConnector\Controller;
 
+use OCA\Crmconnector\Db\CrmFile;
 use OC\IntegrityCheck\Exceptions\InvalidSignatureException;
+use OCA\CrmConnector\Mapper\CrmFileMapper;
+use OCA\CrmConnector\Middleware\CrmUserMiddleware;
 use OCA\CrmConnector\Migration\SeedsStep;
 use OCA\CrmConnector\Requests\CrmFileRequest;
+use OCA\CrmConnector\Service\CrmFileService;
 use OCP\AppFramework\PublicShareController;
 use OCP\Files\IRootFolder;
 use OCP\IConfig;
@@ -12,6 +16,7 @@ use OCP\IRequest;
 use OCP\ISession;
 use OCP\Files\IAppData;
 use OCA\CrmConnector\Traits\CrmConnectionResponse;
+use OCP\IUser;
 
 /**
  * This is the implementation of the server side part of
@@ -36,6 +41,7 @@ class CrmFileApiController extends PublicShareController
 {
 
     use CrmConnectionResponse;
+
     /**
      * @var string
      */
@@ -46,11 +52,6 @@ class CrmFileApiController extends PublicShareController
      */
     private $projectsDir;
 
-    /**
-     * @var IRootFolder
-     */
-    private $storage;
-
     /** @var IAppData */
     private $appData;
 
@@ -59,18 +60,41 @@ class CrmFileApiController extends PublicShareController
     private mixed $files;
 
     private CrmFileRequest $crmFileRequest;
+    private IConfig $config;
+
+    private CrmUserMiddleware $middleware;
+
+    private $user;
+
+    private IRootFolder $storage;
+
+    private CrmFileService $crmFileService;
+
+    private CrmFileMapper $crmFileMapper;
 
     public function __construct(
-        string $appName,
-        IRequest $request,
-        ISession $session,
-        IAppData $appData,
-        CrmFileRequest $crmFileRequest)
+        string            $appName,
+        IRequest          $request,
+        ISession          $session,
+        IAppData          $appData,
+        IConfig           $config,
+        IRootFolder       $storage,
+        CrmFileRequest    $crmFileRequest,
+        CrmUserMiddleware $crmUserMiddleware,
+        CrmFileService    $crmFileService,
+        CrmFileMapper     $crmFileMapper
+    )
     {
         $this->request = $request;
         parent::__construct($appName, $request, $session);
+        $this->middleware = $crmUserMiddleware;
+        $this->user = $this->middleware->authUser($this->request);
         $this->appName = $appName;
         $this->crmFileRequest = $crmFileRequest;
+        $this->config = $config;
+        $this->storage = $storage;
+        $this->crmFileService = $crmFileService;
+        $this->crmFileMapper = $crmFileMapper;
         $this->appData = $appData; //https://docs.nextcloud.com/server/latest/developer_manual/basics/storage/appdata.html
     }
 
@@ -100,55 +124,31 @@ class CrmFileApiController extends PublicShareController
         return false;
     }
 
-
-//    /**
-//     * Create unique filename for uploaded file
-//     * @param UploadedFile $file
-//     * @param $filePath
-//     * @return string
-//     */
-//    protected function createFilename(UploadedFile $file, $filePath): string
-//    {
-//        return $this->checkExistFileName($file, $file->getClientOriginalName(), $filePath);
-//    }
-//
-//    public function checkExistFileName(UploadedFile $file, $fileName, $filePath)
-//    {
-//        $extension = $file->getClientOriginalExtension();
-//        if (Storage::disk('nextcloud')->exists("{$filePath}/$fileName")) {
-//            $clearFilename = trim(str_replace("." . $extension, "", $fileName)); // Filename without extension
-//            $newFileName = "{$clearFilename}-copy." . $extension;
-//            $fileName = $this->checkExistFileName($file, $newFileName, $filePath);
-//        }
-//        return $fileName;
-//    }
-
-////////////////////////////////////////////////////////////////////
-// THE SCRIPT
-////////////////////////////////////////////////////////////////////
-
-//check if request is GET and the requested chunk exists or not. this makes testChunks work
     /**
      * @NoAdminRequired
      * @NoCSRFRequired
      * @PublicPage
-     * @throws InvalidSignatureException
      */
     public function upload()
     {
         try {
-//            Доробити закачування файла з переносом в актівну папку проекту
-            $this->crmFileRequest->validate();
-            $reciever = new FileReceive($this->request);
+            $request = $this->crmFileRequest->validate();
+            $reciever = new FileReceive(
+                $request,
+                $this->config,
+                $this->storage
+            );
             if ($reciever->isUploaded()) {
-                $sourceDir = '';
-                $reciever->uploadedFileMove($sourceDir);
+                $file = $reciever->uploadedFileMove();
+                $file['user_id'] = $this->user['id'];
             };
-//            return $reciever;
-        }catch (\Throwable $exception) {
+            $result = $this->crmFileService->create($file);
+            return $this->success($result->asArray());
+        } catch (\Throwable $exception) {
             return $this->fail($exception);
         }
     }
+
 
     /**
      * @NoAdminRequired
@@ -158,6 +158,8 @@ class CrmFileApiController extends PublicShareController
      */
     public function download(string $uuid): string
     {
+        Доробитит скачування файла, а також шарінг
+    перевірити додавання файла в базу nextcloud після завантаження
         var_dump($uuid);
         die();
         // Work your magic

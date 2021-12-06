@@ -2,9 +2,12 @@
 
 namespace OCA\CrmConnector\Controller;
 
+use OCA\CrmConnector\Db\CrmFile;
+use OCA\CrmConnector\Mapper\CrmFileMapper;
 use OCP\Files\IRootFolder;
 use OCP\IConfig;
 use OCP\IRequest;
+use function Amp\Iterator\discard;
 
 class FileReceive
 {
@@ -18,10 +21,6 @@ class FileReceive
      */
     private $chunk_file;
     /**
-     * @var string
-     */
-    private $fileName;
-    /**
      * @var mixed
      */
     private $resumableIdentifier;
@@ -34,7 +33,6 @@ class FileReceive
      */
     private $uploadedFile;
 
-    private IRootFolder $storage;
     /**
      * @var mixed
      */
@@ -42,26 +40,65 @@ class FileReceive
 
     private string $projectsDir;
 
-    public function __construct(IRequest $request,
-                                IConfig $config,
+    /**
+     * @var string
+     */
+    private string $resumableFilename;
+
+    private $resumableChunkSize;
+
+    private $resumableTotalSize;
+
+    private $resumableTotalChunks;
+
+    private $userFolder;
+    /**
+     * @var mixed
+     */
+    private $projectFolder;
+    /**
+     * @var mixed
+     */
+    private $foldersThree;
+    /**
+     * @var IRootFolder
+     */
+    private $storage;
+    /**
+     * @var mixed
+     */
+    private $uuid;
+
+    private $resumableType;
+    private $file;
+
+    public function __construct(IRequest    $request,
+                                IConfig     $config,
                                 IRootFolder $storage)
     {
         $this->uploadedFile = null;
-        $this->storage = $storage;
-        $this->projectsDir = '';
-        //        $userFolder = $this->storage->getUserFolder('myUser');
+        $this->projectsDir = 'projects';
         $this->uploadsDir = $config->getSystemValue('datadirectory', \OC::$SERVERROOT . '/data');
-        var_dump($this->uploadsDir);
-        die();
+
+        $this->storage = $storage;
+        $this->userFolder = $this->storage->getUserFolder(CrmFile::USERNAME_STORAGE);
+
+        $this->resumableFilename = trim($request->getParam('resumableFilename'));
+        $this->resumableIdentifier = $request->getParam('resumableIdentifier');
+        $this->resumableChunkSize = $request->getParam('resumableChunkSize');
+        $this->resumableTotalSize = $request->getParam('resumableTotalSize');
+        $this->resumableTotalChunks = $request->getParam('resumableTotalChunks');
+        $this->resumableChunkNumber = $request->getParam('resumableChunkNumber');
+        $this->resumableType = $request->getParam('resumableType');
+        $this->uuid = $request->getParam('uuid');
+        $this->file = $request->getUploadedFile('file');
+        $this->projectFolder = $request->getParam('project_name');
+        $this->foldersThree = json_decode($request->getParam('folders_tree'), true);
+
+        $this->temp_dir = 'temp/' . $request->getParam('resumableIdentifier');
+
+        $this->chunk_file = $this->temp_dir . '/' . $this->resumableFilename . '.part' . $this->resumableChunkNumber;
         if ($request->getMethod() === 'GET') {
-
-            $this->fileName = trim($request->getParam('resumableFilename'));
-            $this->resumableIdentifier = $request->getParam('resumableIdentifier');
-            $this->resumableChunkNumber = $request->getParam('resumableChunkNumber');
-            $this->temp_dir = 'temp/' . $request->getParam('resumableIdentifier');
-
-            $this->chunk_file = $this->temp_dir . '/' . $this->fileName . '.part' . $this->resumableChunkNumber;
-
             if (file_exists($this->chunk_file)) {
                 header("HTTP/1.0 200 Ok");
             } else {
@@ -80,16 +117,15 @@ class FileReceive
 
             // check the error status
             if ($file['error'] != 0) {
-                $this->_log('error ' . $file['error'] . ' in file ' . $_POST['resumableFilename']);
+                $this->_log('error ' . $file['error'] . ' in file ' . $this->resumableFilename);
                 continue;
             }
-
             // init the destination file (format <filename.ext>.part<#chunk>
             // the file is stored in a temporary directory
-            if (isset($_POST['resumableIdentifier']) && trim($_POST['resumableIdentifier']) != '') {
-                $this->temp_dir = 'temp/' . $_POST['resumableIdentifier'];
+            if (isset($this->resumableIdentifier) && trim($this->resumableIdentifier) != '') {
+                $this->temp_dir = 'temp/' . $this->resumableIdentifier;
             }
-            $dest_file = $this->temp_dir . '/' . $_POST['resumableFilename'] . '.part' . $_POST['resumableChunkNumber'];
+            $dest_file = $this->temp_dir . '/' . $this->resumableFilename . '.part' . $this->resumableChunkNumber;
 
             // create the temporary directory
             if (!is_dir($this->temp_dir)) {
@@ -98,28 +134,67 @@ class FileReceive
 
             // move the temporary file
             if (!move_uploaded_file($file['tmp_name'], $dest_file)) {
-                $this->_log('Error saving (move_uploaded_file) chunk ' . $_POST['resumableChunkNumber'] . ' for file ' . $_POST['resumableFilename']);
-                return false;
+                throw new \Exception('Error saving (move_uploaded_file) chunk ' . $this->resumableChunkNumber . ' for file ' . $this->resumableFilename);
             } else {
                 // check if all the parts present, and create the final destination file
                 return $this->createFileFromChunks(
-                    $_POST['resumableFilename'],
-                    $_POST['resumableChunkSize'],
-                    $_POST['resumableTotalSize'],
-                    $_POST['resumableTotalChunks']);
+                    $this->resumableFilename,
+                    $this->resumableChunkSize,
+                    $this->resumableTotalSize,
+                    $this->resumableTotalChunks);
             }
         }
     }
 
-    //TODO доробити перенесення файлу після скачування
-    public function uploadedFileMove($sourceDir)
+    /**
+     * @return array $file moved data
+     * @throws \Exception
+     */
+    public function uploadedFileMove(): array
     {
+        try {
+            $file = [];
+            $uploadedFilePath = "{$this->projectFolder}/{$this->foldersThreeString($this->foldersThree)}";
+            $sourceDir = "{$this->uploadsDir}/{$this->userFolder->getPath()}/projects/{$uploadedFilePath}/";
+            $this->foldersThreeCreate($sourceDir);
+            if ($this->moveFile($sourceDir)) {
+                $file['uuid'] = $this->uuid;
+                $file['publication'] = true;
+                $file['file_type'] = (new \OCA\CrmConnector\Db\CrmFile)->getType($this->resumableFilename);
+                $file['file_share'] = 0;
+                $file['extension'] = (new \OCA\CrmConnector\Db\CrmFile)->getExt($this->resumableFilename);
+                $file['file_source'] = "{$uploadedFilePath}/{$this->resumableFilename}";
+                $file['created_at'] = date('Y-m-d H:i:s', time());
+                $file['updated_at'] = date('Y-m-d H:i:s', time());
+                $file['file_original_name'] = $this->resumableFilename;
+            }
+            return $file;
 
+        } catch (\Throwable $exception) {
+            throw new \Exception($exception->getMessage());
+        }
     }
 
-    ////////////////////////////////////////////////////////////////////
-// THE FUNCTIONS
-////////////////////////////////////////////////////////////////////
+    /**
+     * @throws \Exception
+     */
+    public function foldersThreeCreate($sourceDir)
+    {
+        if (!is_dir($sourceDir)) {
+            @mkdir($sourceDir, 0777, true);
+        }
+    }
+
+    /**
+     * Create valid folders three for uploaded file
+     * @param array $folderThree
+     * @return string
+     */
+    public function foldersThreeString(array $folderThree): string
+    {
+        return implode('/', $folderThree);
+    }
+
 
     /**
      *
@@ -131,7 +206,6 @@ class FileReceive
 
         // log to the output
         $log_str = date('d.m.Y') . ": {$str}\r\n";
-        echo $log_str;
 
         // log to file
         if (($fp = fopen('upload_log.txt', 'a+')) !== false) {
@@ -197,15 +271,12 @@ class FileReceive
             if (($fp = fopen($this->temp_dir . '/' . $fileName, 'w')) !== false) {
                 for ($i = 1; $i <= $total_files; $i++) {
                     fwrite($fp, file_get_contents($this->temp_dir . '/' . $fileName . '.part' . $i));
-                    $this->_log('writing chunk ' . $i);
                 }
-                $this->_log('upload done');
                 fclose($fp);
                 $this->uploadedFile = $fp;
                 return true;
             } else {
-                $this->_log('cannot create the destination file');
-                return false;
+                throw new \Exception('cannot create the destination file');
             }
         }
     }
@@ -213,44 +284,45 @@ class FileReceive
 
     /**
      * Move uploaded file to projects dir and remove $temp_dir
-     * @param string $temp_dir
-     * @param string $fileName
-     * @param $projectName
-     * @param $foldersTree
      * @return string $uploadedFilePath
+     * @throws \Exception
      */
-    public function moveFile(string $temp_dir, string $fileName, $projectName, $foldersTree)
+    public function moveFile($sourceDir): string
     {
-        $uploadedFilePath = '';
-        mkdir($this->uploadsDir);
-//        $this->makeFileDir();
-        if (copy("$temp_dir/$fileName", "$this->uploadsDir/$fileName")) {
-            $this->_log('copy file');
-        } else {
-            $this->_log('not copy');
-        };
+        $fileName = $this->createFilename($this->resumableFilename, $sourceDir);
+        if (!copy("$this->temp_dir/$this->resumableFilename", "{$sourceDir}/$fileName")) {
+            throw new \Exception('Uploaded file not move');
+        }
+        $this->resumableFilename = $fileName;
         // rename the temporary directory (to avoid access from other
         // concurrent chunks uploads) and that delete it
-        if (rename($temp_dir, $temp_dir . '_UNUSED')) {
-            $this->rrmdir($temp_dir . '_UNUSED');
+        if (rename($this->temp_dir, $this->temp_dir . '_UNUSED')) {
+            $this->rrmdir($this->temp_dir . '_UNUSED');
         } else {
-            $this->rrmdir($temp_dir);
+            $this->rrmdir($this->temp_dir);
         }
-        return $uploadedFilePath;
-    }
-
-    public function makeFileDir($projectName, $folderTree)
-    {
-        $foldersThree = json_decode($folderTree);
+        return true;
     }
 
     /**
-     * Create valid folders three for uploaded file
-     * @param array $folderThree
+     * Create unique filename for uploaded file
+     * @param $file
+     * @param $filePath
      * @return string
      */
-    public function foldersThreeString(array $folderThree): string
+    protected function createFilename($fileName, $filePath): string
     {
-        return implode('/', $folderThree);
+        return $this->checkExistFileName($fileName, $filePath);
+    }
+
+    public function checkExistFileName($fileName, $sourceDir)
+    {
+        $extension = (new \OCA\CrmConnector\Db\CrmFile)->getExt($this->file['name']);
+        if (is_file("{$sourceDir}/$fileName")) {
+            $clearFilename = trim(str_replace("." . $extension, "", $fileName)); // Filename without extension
+            $newFileName = "{$clearFilename}-copy." . $extension;
+            $fileName = $this->checkExistFileName($newFileName, $sourceDir);
+        }
+        return $fileName;
     }
 }
