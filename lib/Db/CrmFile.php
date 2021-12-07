@@ -138,7 +138,9 @@ class CrmFile extends Entity
     const PROJECT_DOCUMENT_EXT = ['doc', 'docx', 'pdf', 'odt', 'zip'];
     const PROJECT_AUDIO_EXT = ['mp3', 'ogg', 'mpga'];
     const PROJECT_VIDEO_EXT = ['mp4', 'mpeg'];
-    const USERNAME_STORAGE = 'admin';
+
+    const CRM_USER = 'admin';
+    const CRM_STORAGE = 'projects';
 
 
     public function __construct()

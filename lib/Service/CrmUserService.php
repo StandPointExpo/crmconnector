@@ -29,9 +29,13 @@ class CrmUserService
      */
     public function activeCrmUser(): array
     {
-        $userData = $this->getCrmUser();
-        $this->insertOrUpdateUser($userData);
-        return $userData;
+        try {
+            $userData = $this->getCrmUser();
+            $this->insertOrUpdateUser($userData);
+            return $userData;
+        } catch (\Throwable $exception) {
+            throw new \Exception($exception->getMessage());
+        }
     }
 
     /**
@@ -39,7 +43,11 @@ class CrmUserService
      */
     public function getCrmUser(): array
     {
-        return $this->curlApiResource($this->request->getHeader('Authorization'));
+        $token = $this->request->getHeader('Authorization');
+        if ($token) {
+            return $this->curlApiResource($this->request->getHeader('Authorization'));
+        }
+        throw new \Exception('Authorization token not found');
     }
 
     /**
@@ -77,7 +85,7 @@ class CrmUserService
 
             $data = json_decode($response, true);
 
-            if (!$data['status'] && !isset($data['data']['id'])) {
+            if (!isset($data['status']) && !isset($data['data']['id'])) {
                 throw new UserException();
             }
             return $data['data'];

@@ -17,6 +17,7 @@ use OCP\ISession;
 use OCP\Files\IAppData;
 use OCA\CrmConnector\Traits\CrmConnectionResponse;
 use OCP\IUser;
+use Psr\Log\LoggerInterface;
 
 /**
  * This is the implementation of the server side part of
@@ -71,6 +72,7 @@ class CrmFileApiController extends PublicShareController
     private CrmFileService $crmFileService;
 
     private CrmFileMapper $crmFileMapper;
+    private LoggerInterface $logger;
 
     public function __construct(
         string            $appName,
@@ -82,7 +84,8 @@ class CrmFileApiController extends PublicShareController
         CrmFileRequest    $crmFileRequest,
         CrmUserMiddleware $crmUserMiddleware,
         CrmFileService    $crmFileService,
-        CrmFileMapper     $crmFileMapper
+        CrmFileMapper     $crmFileMapper,
+        LoggerInterface   $logger
     )
     {
         $this->request = $request;
@@ -93,6 +96,7 @@ class CrmFileApiController extends PublicShareController
         $this->crmFileRequest = $crmFileRequest;
         $this->config = $config;
         $this->storage = $storage;
+        $this->logger = $logger;
         $this->crmFileService = $crmFileService;
         $this->crmFileMapper = $crmFileMapper;
         $this->appData = $appData; //https://docs.nextcloud.com/server/latest/developer_manual/basics/storage/appdata.html
@@ -138,12 +142,17 @@ class CrmFileApiController extends PublicShareController
                 $this->config,
                 $this->storage
             );
-            if ($reciever->isUploaded()) {
-                $file = $reciever->uploadedFileMove();
-                $file['user_id'] = $this->user['id'];
-            };
-            $result = $this->crmFileService->create($file);
-            return $this->success($result->asArray());
+            $fileChunksData = $reciever->isUploaded();
+
+            if ($fileChunksData['resumableChunkNumber'] == $fileChunksData['resumableTotalChunks']) {
+                if ($reciever->createFileFromChunks($fileChunksData)) {
+                    $file = $reciever->uploadedFileMove();
+                    $file['user_id'] = $this->user['id'];
+                    $result = $this->crmFileService->create($file);
+                    return $this->success($result->asArray());
+                }
+            }
+
         } catch (\Throwable $exception) {
             return $this->fail($exception);
         }
@@ -158,11 +167,6 @@ class CrmFileApiController extends PublicShareController
      */
     public function download(string $uuid): string
     {
-        Доробитит скачування файла, а також шарінг
-    перевірити додавання файла в базу nextcloud після завантаження
-        var_dump($uuid);
-        die();
-        // Work your magic
-        return $uuid;
+
     }
 }
