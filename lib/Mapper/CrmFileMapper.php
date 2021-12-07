@@ -41,6 +41,21 @@ class CrmFileMapper extends QBMapper
         return $fetch;
     }
 
+    /**
+     * @throws Exception
+     */
+    public function getUuidFile(string $uuid) {
+        $db = $this->db->getQueryBuilder();
+        $result = $db->select('*')
+            ->from($this->getTableName())
+            ->where(
+                $db->expr()->eq('uuid', $db->createNamedParameter($uuid, 'string'))
+            )->execute();
+        $fetch = $result->fetch();
+        $result->closeCursor();
+        return $fetch;
+    }
+
     public function createFileFromRow(array $row): CrmFile
     {
         return $this->mapRowToEntity([

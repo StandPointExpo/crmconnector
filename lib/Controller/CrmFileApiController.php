@@ -2,6 +2,7 @@
 
 namespace OCA\CrmConnector\Controller;
 
+use OC\User\NoUserException;
 use OCA\Crmconnector\Db\CrmFile;
 use OC\IntegrityCheck\Exceptions\InvalidSignatureException;
 use OCA\CrmConnector\Mapper\CrmFileMapper;
@@ -9,14 +10,18 @@ use OCA\CrmConnector\Middleware\CrmUserMiddleware;
 use OCA\CrmConnector\Migration\SeedsStep;
 use OCA\CrmConnector\Requests\CrmFileRequest;
 use OCA\CrmConnector\Service\CrmFileService;
+use OCA\CrmConnector\Traits\CrmFileTrait;
+use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\PublicShareController;
 use OCP\Files\IRootFolder;
+use OCP\Files\NotFoundException;
+use OCP\Files\NotPermittedException;
 use OCP\IConfig;
 use OCP\IRequest;
 use OCP\ISession;
 use OCP\Files\IAppData;
 use OCA\CrmConnector\Traits\CrmConnectionResponse;
-use OCP\IUser;
+use OCP\AppFramework\Http\StreamResponse;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -42,6 +47,7 @@ class CrmFileApiController extends PublicShareController
 {
 
     use CrmConnectionResponse;
+    use CrmFileTrait;
 
     /**
      * @var string
@@ -164,9 +170,47 @@ class CrmFileApiController extends PublicShareController
      * @NoCSRFRequired
      * @PublicPage
      * @param string $uuid
+     * @throws \OCP\DB\Exception
      */
-    public function download(string $uuid): string
+    public function download(string $uuid): StreamResponse
     {
+        try {
+            $file = $this->crmFileMapper->getUuidFile($uuid);
+            $userFolder = $this->storage->getUserFolder(CrmFile::CRM_USER);
+            $activeFolder = $this->getActiveFolder($userFolder, $file['file_source']);
+            if ($activeFolder->getPath()) {
+                $uploadsDir = $this->config->getSystemValue('datadirectory', \OC::$SERVERROOT . '/data');
+                return new StreamResponse($uploadsDir . $activeFolder->getPath());
+            }
+        } catch (NotPermittedException $e) {
+        } catch (NoUserException $e) {
+        } catch (NotFoundException $e) {
+        }
+
+    }
+
+    /**
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * @PublicPage
+     * @param string $uuid
+     * @throws \OCP\DB\Exception
+     */
+    public function share(string $uuid)
+    {
+        try {
+            $file = $this->crmFileMapper->getUuidFile($uuid);
+            var_dump($file);
+//            $userFolder = $this->storage->getUserFolder(CrmFile::CRM_USER);
+//            $activeFolder = $this->getActiveFolder($userFolder, $file['file_source']);
+//            if ($activeFolder->getPath()) {
+//                $uploadsDir = $this->config->getSystemValue('datadirectory', \OC::$SERVERROOT . '/data');
+//                return new StreamResponse($uploadsDir . $activeFolder->getPath());
+//            }
+        } catch (NotPermittedException $e) {
+        } catch (NoUserException $e) {
+        } catch (NotFoundException $e) {
+        }
 
     }
 }

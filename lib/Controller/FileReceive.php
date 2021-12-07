@@ -5,6 +5,7 @@ namespace OCA\CrmConnector\Controller;
 use OC\Files\AppData\AppData;
 use OCA\CrmConnector\Db\CrmFile;
 use OCA\CrmConnector\Mapper\CrmFileMapper;
+use OCA\CrmConnector\Traits\CrmFileTrait;
 use OCP\Files\IRootFolder;
 use OCP\Files\NotPermittedException;
 use OCP\IConfig;
@@ -13,6 +14,7 @@ use function Amp\Iterator\discard;
 
 class FileReceive
 {
+    use CrmFileTrait;
 
     /**
      * @var string
@@ -192,7 +194,7 @@ class FileReceive
         if (!is_dir($sourceDir)) {
             $activeFolder = $this->foldersCreate($uploadedFilePath);
         } else {
-            $activeFolder = $this->getActiveFolder($uploadedFilePath);
+            $activeFolder = $this->getActiveFolder($this->userFolder, $uploadedFilePath);
         }
         return $activeFolder;
     }
@@ -236,41 +238,6 @@ class FileReceive
 
         if (count($foldersArr) > 0) {
             $folder = $this->folderCreateRecursive($folder, $foldersArr);
-        }
-
-        return $folder;
-    }
-
-
-    /**
-     * Check and create projetcs folder and start recursive new folders three
-     * @param string $uploadedFilePath
-     * @return bool $folder - IRootFolder
-     * @throws \OCP\Files\NotFoundException
-     */
-
-    public function getActiveFolder(string $uploadedFilePath)
-    {
-
-        $projects = $this->userFolder->get(CrmFile::CRM_STORAGE);
-        $foldersArr = explode('/', $uploadedFilePath);
-        return $this->folderGetRecursive($projects, $foldersArr);
-
-    }
-
-    /**
-     * @param $parentFolder - is IRootFolder after get()
-     * @param array $foldersArr
-     * @return mixed $folder - IRootFolder
-     */
-
-    public function folderGetRecursive($parentFolder, array $foldersArr)
-    {
-        $newFolder = array_shift($foldersArr);
-        $folder = $parentFolder->get($newFolder);
-
-        if (count($foldersArr) > 0) {
-            $folder = $this->folderGetRecursive($folder, $foldersArr);
         }
 
         return $folder;
