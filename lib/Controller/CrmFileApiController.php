@@ -12,7 +12,9 @@ use OCA\CrmConnector\Requests\CrmFileRequest;
 use OCA\CrmConnector\Service\CrmFileService;
 use OCA\CrmConnector\Traits\CrmFileTrait;
 use OCA\Mail\Http\AvatarDownloadResponse;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DownloadResponse;
+use OCP\AppFramework\Http\FileDisplayResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\PublicShareController;
 use OCP\Files\IRootFolder;
@@ -181,14 +183,9 @@ class CrmFileApiController extends PublicShareController
             $userFolder = $this->storage->getUserFolder(CrmFile::CRM_USER);
             $image = $this->getActiveFolder($userFolder, $file['file_source']);
             if ($image->getPath()) {
-
-                $resp = new AvatarDownloadResponse($image);
-                $resp->addHeader('Content-Type', $image->getMimeType());
-
-                // Let the browser cache this for a week
-                $resp->cacheFor(7 * 24 * 60 * 60);
-
-                return $resp;
+                $response = new FileDisplayResponse($image, Http::STATUS_OK, ['Content-Type' => $image->getMimeType()]);
+                $response->cacheFor(3600 * 24);
+                return $response;
             }
         } catch (NotPermittedException $e) {
             return $this->fail($e);
