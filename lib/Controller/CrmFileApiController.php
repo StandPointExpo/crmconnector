@@ -173,7 +173,7 @@ class CrmFileApiController extends PublicShareController
      * @param string $uuid
      * @throws \OCP\DB\Exception
      */
-    public function download(string $uuid): DownloadResponse
+    public function download(string $uuid)
     {
         try {
             $file = $this->crmFileMapper->getUuidFile($uuid);
