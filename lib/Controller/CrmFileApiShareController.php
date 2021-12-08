@@ -97,7 +97,7 @@ class CrmFileApiShareController extends PublicShareController
 
             $share = $this->createShare($uuid);
             return $this->success(
-                $this->config->getSystemValue('overwrite.cli.url') .
+                $this->config->getSystemValue('storage_url') .
                 '/index.php/s/' .
                 $share['token']);
 
