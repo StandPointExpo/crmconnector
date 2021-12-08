@@ -11,6 +11,7 @@ use OCA\CrmConnector\Migration\SeedsStep;
 use OCA\CrmConnector\Requests\CrmFileRequest;
 use OCA\CrmConnector\Service\CrmFileService;
 use OCA\CrmConnector\Traits\CrmFileTrait;
+use OCP\AppFramework\Http\DownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\PublicShareController;
 use OCP\Files\IRootFolder;
@@ -172,7 +173,7 @@ class CrmFileApiController extends PublicShareController
      * @param string $uuid
      * @throws \OCP\DB\Exception
      */
-    public function download(string $uuid): StreamResponse
+    public function download(string $uuid): DownloadResponse
     {
         try {
             $file = $this->crmFileMapper->getUuidFile($uuid);
@@ -180,7 +181,10 @@ class CrmFileApiController extends PublicShareController
             $activeFile = $this->getActiveFolder($userFolder, $file['file_source']);
             if ($activeFile->getPath()) {
                 $uploadsDir = $this->config->getSystemValue('datadirectory', \OC::$SERVERROOT . '/data');
-                return new StreamResponse($uploadsDir . $activeFile->getPath());
+                return new DownloadResponse(
+                    $uploadsDir . $activeFile->getPath(),
+                    $activeFile->getMimetype()
+                );
             }
         } catch (NotPermittedException $e) {
             return $this->fail($e);

@@ -101,7 +101,7 @@ class FileReceive
 
             if ($request->getMethod() === 'GET') {
 
-                $this->temp_dir = 'temp/' . $this->resumableIdentifier;
+                $this->temp_dir = $this->uploadsDir . 'temp/' . $this->resumableIdentifier;
                 $this->chunk_file = $this->temp_dir . '/' . $this->resumableFilename . '.part' . $this->resumableChunkNumber;
 
                 if (file_exists($this->chunk_file)) {
@@ -138,7 +138,7 @@ class FileReceive
             // the file is stored in a temporary directory
 
             if ($this->resumableIdentifier && trim($this->resumableIdentifier) != '') {
-                $this->temp_dir = 'temp/' . $this->resumableIdentifier;
+                $this->temp_dir = $this->uploadsDir . 'temp/' . $this->resumableIdentifier;
             }
             $dest_file = $this->temp_dir . '/' . $this->resumableFilename . '.part' . $this->resumableChunkNumber;
 
@@ -150,7 +150,6 @@ class FileReceive
             if (!move_uploaded_file($file['tmp_name'], $dest_file)) {
                 throw new \Exception('Error saving (move_uploaded_file) chunk ' . $this->resumableChunkNumber . ' for file ' . $this->resumableFilename);
             } else {
-                $this->_log('dsfdsfds 1');
                 return [
                     'temp_dir' => $this->temp_dir,
                     'resumableFilename' => $this->resumableFilename,
