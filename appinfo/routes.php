@@ -11,6 +11,6 @@ return [
     'routes' => [
 	   ['name' => 'CrmFileApi#upload', 'url' => '/api/v1/crm-files', 'verb' => 'POST'],
 	   ['name' => 'CrmFileApi#download', 'url' => '/api/v1/crm-files/{uuid}', 'verb' => 'GET'],
-	   ['name' => 'CrmFileApi#share', 'url' => '/api/v1/crm-files/{uuid}/share', 'verb' => 'GET'],
+	   ['name' => 'CrmFileApiShare#share', 'url' => '/api/v1/crm-files/{uuid}/share', 'verb' => 'GET'],
     ]
 ];

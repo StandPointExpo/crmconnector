@@ -177,40 +177,17 @@ class CrmFileApiController extends PublicShareController
         try {
             $file = $this->crmFileMapper->getUuidFile($uuid);
             $userFolder = $this->storage->getUserFolder(CrmFile::CRM_USER);
-            $activeFolder = $this->getActiveFolder($userFolder, $file['file_source']);
-            if ($activeFolder->getPath()) {
+            $activeFile = $this->getActiveFolder($userFolder, $file['file_source']);
+            if ($activeFile->getPath()) {
                 $uploadsDir = $this->config->getSystemValue('datadirectory', \OC::$SERVERROOT . '/data');
-                return new StreamResponse($uploadsDir . $activeFolder->getPath());
+                return new StreamResponse($uploadsDir . $activeFile->getPath());
             }
         } catch (NotPermittedException $e) {
+            return $this->fail($e);
         } catch (NoUserException $e) {
+            return $this->fail($e);
         } catch (NotFoundException $e) {
+            return $this->fail($e);
         }
-
-    }
-
-    /**
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     * @PublicPage
-     * @param string $uuid
-     * @throws \OCP\DB\Exception
-     */
-    public function share(string $uuid)
-    {
-        try {
-            $file = $this->crmFileMapper->getUuidFile($uuid);
-            var_dump($file);
-//            $userFolder = $this->storage->getUserFolder(CrmFile::CRM_USER);
-//            $activeFolder = $this->getActiveFolder($userFolder, $file['file_source']);
-//            if ($activeFolder->getPath()) {
-//                $uploadsDir = $this->config->getSystemValue('datadirectory', \OC::$SERVERROOT . '/data');
-//                return new StreamResponse($uploadsDir . $activeFolder->getPath());
-//            }
-        } catch (NotPermittedException $e) {
-        } catch (NoUserException $e) {
-        } catch (NotFoundException $e) {
-        }
-
     }
 }

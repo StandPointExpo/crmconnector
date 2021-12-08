@@ -60,7 +60,7 @@ class Version001Date20211122160137 extends SimpleMigrationStep {
             'length' => 64
         ]);
 
-        $table->addColumn('share_token', CrmConnectorTypes::STRING, [
+        $table->addColumn('token', CrmConnectorTypes::STRING, [
             'notnull' => true,
             'length' => 255,
         ]);
