@@ -101,7 +101,7 @@ class FileReceive
 
             if ($request->getMethod() === 'GET') {
 
-                $this->temp_dir = $this->uploadsDir . 'temp/' . $this->resumableIdentifier;
+                $this->temp_dir = $this->uploadsDir . '/temp/' . $this->resumableIdentifier;
                 $this->chunk_file = $this->temp_dir . '/' . $this->resumableFilename . '.part' . $this->resumableChunkNumber;
 
                 if (file_exists($this->chunk_file)) {
@@ -138,7 +138,7 @@ class FileReceive
             // the file is stored in a temporary directory
 
             if ($this->resumableIdentifier && trim($this->resumableIdentifier) != '') {
-                $this->temp_dir = $this->uploadsDir . 'temp/' . $this->resumableIdentifier;
+                $this->temp_dir = $this->uploadsDir . '/temp/' . $this->resumableIdentifier;
             }
             $dest_file = $this->temp_dir . '/' . $this->resumableFilename . '.part' . $this->resumableChunkNumber;
 
