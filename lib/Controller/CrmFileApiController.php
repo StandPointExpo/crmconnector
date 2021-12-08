@@ -11,6 +11,7 @@ use OCA\CrmConnector\Migration\SeedsStep;
 use OCA\CrmConnector\Requests\CrmFileRequest;
 use OCA\CrmConnector\Service\CrmFileService;
 use OCA\CrmConnector\Traits\CrmFileTrait;
+use OCA\Mail\Http\AvatarDownloadResponse;
 use OCP\AppFramework\Http\DownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\PublicShareController;
@@ -173,6 +174,38 @@ class CrmFileApiController extends PublicShareController
      * @param string $uuid
      * @throws \OCP\DB\Exception
      */
+    public function getFile(string $uuid)
+    {
+        try {
+            $file = $this->crmFileMapper->getUuidFile($uuid);
+            $userFolder = $this->storage->getUserFolder(CrmFile::CRM_USER);
+            $image = $this->getActiveFolder($userFolder, $file['file_source']);
+            if ($image->getPath()) {
+
+                $resp = new AvatarDownloadResponse($image);
+                $resp->addHeader('Content-Type', $image->getMimeType());
+
+                // Let the browser cache this for a week
+                $resp->cacheFor(7 * 24 * 60 * 60);
+
+                return $resp;
+            }
+        } catch (NotPermittedException $e) {
+            return $this->fail($e);
+        } catch (NoUserException $e) {
+            return $this->fail($e);
+        } catch (NotFoundException $e) {
+            return $this->fail($e);
+        }
+    }
+
+    /**
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * @PublicPage
+     * @param string $uuid
+     * @throws \OCP\DB\Exception
+     */
     public function download(string $uuid)
     {
         try {
@@ -181,10 +214,7 @@ class CrmFileApiController extends PublicShareController
             $activeFile = $this->getActiveFolder($userFolder, $file['file_source']);
             if ($activeFile->getPath()) {
                 $uploadsDir = $this->config->getSystemValue('datadirectory', \OC::$SERVERROOT . '/data');
-                return new DownloadResponse(
-                    $uploadsDir . $activeFile->getPath(),
-                    $activeFile->getMimetype()
-                );
+                return new StreamResponse($uploadsDir . $activeFile->getPath());
             }
         } catch (NotPermittedException $e) {
             return $this->fail($e);
