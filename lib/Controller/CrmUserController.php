@@ -2,6 +2,7 @@
 
 namespace OCA\CrmConnector\Controller;
 
+use OCA\CrmConnector\Db\CrmToken;
 use OCP\AppFramework\PublicShareController;
 
 class CrmUserController extends PublicShareController
@@ -19,7 +20,7 @@ class CrmUserController extends PublicShareController
      * will return a 404.
      */
     public function isValidToken(): bool {
-        return $this->getToken() === 'secretToken';
+        return $this->getToken() === CrmToken::APP_TOKEN;
     }
 
     /**

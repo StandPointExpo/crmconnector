@@ -17,6 +17,8 @@ use OCP\AppFramework\Db\Entity;
  */
 class CrmToken extends Entity
 {
+    public const APP_TOKEN = 'secretToken';
+
     protected $userId;
 
     protected $token;

@@ -5,6 +5,7 @@ namespace OCA\CrmConnector\Controller;
 use OC\User\NoUserException;
 use OCA\CrmConnector\Db\CrmFile;
 use OCA\CrmConnector\Db\CrmShare;
+use OCA\CrmConnector\Db\CrmToken;
 use OCA\CrmConnector\Mapper\CrmFileMapper;
 use OCA\CrmConnector\Mapper\CrmShareMapper;
 use OCA\CrmConnector\Middleware\CrmUserMiddleware;
@@ -73,7 +74,7 @@ class CrmFileApiShareController extends PublicShareController
      */
     public function isValidToken(): bool
     {
-        return $this->getToken() === 'secretToken';
+        return $this->getToken() === CrmToken::APP_TOKEN;
     }
 
     /**

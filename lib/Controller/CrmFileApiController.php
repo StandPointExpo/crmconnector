@@ -5,6 +5,7 @@ namespace OCA\CrmConnector\Controller;
 use OC\User\NoUserException;
 use OCA\Crmconnector\Db\CrmFile;
 use OC\IntegrityCheck\Exceptions\InvalidSignatureException;
+use OCA\CrmConnector\Db\CrmToken;
 use OCA\CrmConnector\Mapper\CrmFileMapper;
 use OCA\CrmConnector\Middleware\CrmUserMiddleware;
 use OCA\CrmConnector\Migration\SeedsStep;
@@ -127,7 +128,7 @@ class CrmFileApiController extends PublicShareController
      */
     public function isValidToken(): bool
     {
-        return $this->getToken() === 'secretToken';
+        return $this->getToken() === CrmToken::APP_TOKEN;
     }
 
     /**
@@ -160,12 +161,25 @@ class CrmFileApiController extends PublicShareController
                     $file['user_id'] = $this->user['id'];
                     $result = $this->crmFileService->create($file);
                     return $this->success($result->asArray());
+//                    return $this->success($this->saveFileData($result->asArray()));
                 }
             }
 
         } catch (\Throwable $exception) {
             return $this->fail($exception);
         }
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function saveFileData(array $file): array
+    {
+        $token = $this->request->getHeader('Authorization');
+        return $this->crmFileService->curlApiFileResource(
+            $token,
+            $file,
+            $this->request);
     }
 
 
