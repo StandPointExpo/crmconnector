@@ -2,15 +2,12 @@
 
 namespace OCA\CrmConnector\Controller;
 
-use OC\Files\AppData\AppData;
 use OCA\CrmConnector\Db\CrmFile;
-use OCA\CrmConnector\Mapper\CrmFileMapper;
 use OCA\CrmConnector\Traits\CrmFileTrait;
 use OCP\Files\IRootFolder;
 use OCP\Files\NotPermittedException;
 use OCP\IConfig;
 use OCP\IRequest;
-use function Amp\Iterator\discard;
 
 class FileReceive
 {
@@ -131,7 +128,6 @@ class FileReceive
         if (!empty($_FILES)) foreach ($_FILES as $file) {
             // check the error status
             if ($file['error'] != 0) {
-                $this->_log('error ' . $file['error'] . ' in file ' . $this->resumableFilename);
                 continue;
             }
             // init the destination file (format <filename.ext>.part<#chunk>
@@ -253,25 +249,6 @@ class FileReceive
         return implode('/', $folderThree);
     }
 
-
-    /**
-     *
-     * Logging operation - to a file (upload_log.txt) and to the stdout
-     * @param string $str - the logging string
-     */
-    function _log($str)
-    {
-
-        // log to the output
-        $log_str = date('d.m.Y') . ": {$str}\r\n";
-
-        // log to file
-        if (($fp = fopen('upload_log.txt', 'a+')) !== false) {
-            fputs($fp, $log_str);
-            fclose($fp);
-        }
-    }
-
     /**
      *
      * Delete a directory RECURSIVELY
@@ -336,7 +313,7 @@ class FileReceive
                 }
             }
         } catch (\Throwable $exception) {
-            $this->_log($exception->getMessage());
+            throw new \Exception($exception->getMessage());
         }
     }
 

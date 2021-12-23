@@ -161,7 +161,6 @@ class CrmFileApiController extends PublicShareController
                     $file['user_id'] = $this->user['id'];
                     $result = $this->crmFileService->create($file);
                     return $this->success($result->asArray());
-//                    return $this->success($this->saveFileData($result->asArray()));
                 }
             }
 

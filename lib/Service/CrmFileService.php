@@ -32,7 +32,6 @@ class CrmFileService
     public function create(array $dataFile): Entity
     {
         $file = new CrmFile();
-        $file->setId($dataFile['id']);
         $file->setUserId($dataFile['user_id']);
         $file->setUuid($dataFile['uuid']);
         $file->setPublication($dataFile['publication']);
@@ -41,7 +40,6 @@ class CrmFileService
         $file->setFileSource($dataFile['file_source']);
         $file->setFileShare($dataFile['file_share']);
         $file->setExtension($dataFile['extension']);
-        $file->setDeletedAt($dataFile['deleted_at']);
         $file->setCreatedAt($dataFile['created_at']);
         $file->setUpdatedAt($dataFile['updated_at']);
 
