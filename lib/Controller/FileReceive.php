@@ -329,7 +329,7 @@ class FileReceive
     {
         try {
             $sourceDir = "{$this->uploadsDir}{$this->userFolder->getPath()}/" . CrmFile::CRM_STORAGE . "/{$uploadedFilePath}/";
-            $fileName = $this->createFilename($this->resumableFilename, $sourceDir);
+            $fileName = $this->setValidConv($this->createFilename($this->resumableFilename, $sourceDir));
             if (!copy("$this->temp_dir/$this->resumableFilename", "{$sourceDir}/$fileName")) {
                 throw new \Exception('Uploaded file not move');
             }
@@ -368,6 +368,16 @@ class FileReceive
     protected function createFilename($fileName, $filePath): string
     {
         return $this->checkExistFileName($fileName, $filePath);
+    }
+
+    /**
+     * Converting a string to the valid encoding
+     * @param $string
+     * @return string
+     */
+    public function setValidConv($string): string
+    {
+        return iconv('utf-8', 'ISO-8859-1//TRANSLIT', $string);
     }
 
     public function checkExistFileName($fileName, $sourceDir)
