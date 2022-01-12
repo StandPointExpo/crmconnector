@@ -377,7 +377,7 @@ class FileReceive
      */
     public function setValidConv($string): string
     {
-        return iconv('utf-8', 'ISO-8859-1//TRANSLIT', $string);
+        return $string;
     }
 
     public function checkExistFileName($fileName, $sourceDir)
