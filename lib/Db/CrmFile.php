@@ -72,7 +72,6 @@ class CrmFile extends Entity
         'doc',
         'docx',
         'dot',
-        'pdf',
         'odt',
         'xlt',
         'dwg',

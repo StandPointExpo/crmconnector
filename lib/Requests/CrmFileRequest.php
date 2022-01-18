@@ -37,7 +37,7 @@ class CrmFileRequest
         };
         $info = new SplFileInfo($file['name']);
 
-        if(!in_array( strtolower($info->getExtension()), $this->crmFile->validExtensions())) {
+        if(!in_array( mb_strtolower($info->getExtension()), $this->crmFile->validExtensions())) {
             throw new FileExtException( $file['name'] );
         }
 
