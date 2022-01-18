@@ -28,19 +28,21 @@ class CrmFileRequest
     /**
      * @throws \Exception
      */
-    public function validate (): IRequest
+    public function validate(): IRequest
     {
         $file = $this->request->getUploadedFile('file');
 
-        if(is_null($file)) {
+        if (is_null($file)) {
             throw new FileException();
         };
-        $info = new SplFileInfo($file['name']);
+        $fileInfo = new SplFileInfo($file['name']);
+        $fileType = mime_content_type($file['tmp_name']);
+        $types = $this->crmFile->validTypes();
+        $ext = strtolower($fileInfo->getExtension());
 
-        if(!in_array( mb_strtolower($info->getExtension()), $this->crmFile->validExtensions())) {
-            throw new FileExtException( $file['name'] );
+        if ($types[$ext] == $fileType) {
+            return $this->request;
         }
-
-        return $this->request;
+        throw new FileExtException($file['name']);
     }
 }

@@ -4,12 +4,10 @@ namespace OCA\CrmConnector\Mapper;
 
 use OCA\CrmConnector\Db\CrmConnectorTypes;
 use OCA\CrmConnector\Db\CrmFile;
-use OCA\CrmConnector\Exception\FileExtException;
 use OCP\AppFramework\Db\Entity;
 use \OCP\AppFramework\Db\QBMapper;
 use OCP\DB\Exception;
 use OCP\IDBConnection;
-use OCP\IUser;
 
 class CrmFileMapper extends QBMapper
 {
