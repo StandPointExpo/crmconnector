@@ -40,7 +40,7 @@ class CrmFileRequest
         $types = $this->crmFile->validTypes();
         $ext = strtolower($fileInfo->getExtension());
 
-        if ($types[$ext] == $fileType) {
+        if (in_array($fileType, $types)) {
             return $this->request;
         }
         throw new FileExtException($file['name']);
