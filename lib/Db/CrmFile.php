@@ -271,7 +271,25 @@ class CrmFile extends Entity
             'image/x-eps',
             'image/x-dwg',
             'image/x-dxf',
-            'drawing/x-dwf'
+            'drawing/x-dwf',
+            'application/acad',
+            'application/clariscad',
+            'application/drafting',
+            'application/oda',
+            'multipart/x-gzip',
+            'multipart/x-zip',
+            'application/x-gzip',
+            'application/msexcel',
+            'application/msaccess',
+            'application/mspowerpoint',
+            'application/msword',
+            'application/mswrite',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.template',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'application/vnd.ms-excel.sheet.binary.macroEnabled.12',
+            'application/vnd.ms-excel',
+            'application/vnd.ms-excel.sheet.macroEnabled.12'
         );
     }
 
