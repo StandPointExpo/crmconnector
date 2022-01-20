@@ -36,11 +36,9 @@ class CrmFileRequest
             throw new FileException();
         };
         $fileInfo = new SplFileInfo($file['name']);
-        $fileType = mime_content_type($file['tmp_name']);
-        $types = $this->crmFile->validTypes();
+        $extensions = $this->crmFile->validExtensions();
         $ext = strtolower($fileInfo->getExtension());
-
-        if (in_array($fileType, $types)) {
+        if (in_array($ext, $extensions)) {
             return $this->request;
         }
         throw new FileExtException($file['name']);

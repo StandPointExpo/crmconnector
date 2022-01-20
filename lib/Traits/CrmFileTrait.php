@@ -2,6 +2,7 @@
 
 namespace OCA\CrmConnector\Traits;
 
+use OC\Files\Node\Folder;
 use OCA\CrmConnector\Db\CrmFile;
 
 trait CrmFileTrait
@@ -15,10 +16,9 @@ trait CrmFileTrait
 
     public function getActiveFolder($userFolder, string $uploadedFilePath)
     {
-
-        $projects = $userFolder->get(CrmFile::CRM_STORAGE);
+        $projectsPath = $userFolder->getFullPath(CrmFile::CRM_STORAGE);
         $foldersArr = explode('/', $uploadedFilePath);
-        return $this->folderGetRecursive($projects, $foldersArr);
+        return $this->folderGetRecursive($projectsPath, $foldersArr);
 
     }
 
@@ -31,7 +31,9 @@ trait CrmFileTrait
     public function folderGetRecursive($parentFolder, array $foldersArr)
     {
         $newFolder = array_shift($foldersArr);
-        $folder = $parentFolder->get($newFolder);
+        var_dump($newFolder);
+        die();
+        $folder = $parentFolder->getFullPath($newFolder);
 
         if (count($foldersArr) > 0) {
             $folder = $this->folderGetRecursive($folder, $foldersArr);

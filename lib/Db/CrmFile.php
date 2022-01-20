@@ -66,7 +66,7 @@ class CrmFile extends Entity
     /** @var mixed */
     protected $updatedAt;
 
-    public const IMAGE_EXT = ['JPG', 'jpg', 'jpeg', 'png', 'gif', 'tiff'];
+    public const IMAGE_EXT = ['jpg', 'jpeg', 'png', 'gif', 'tiff'];
 
     public const DOCUMENT_EXT = [
         'doc',
@@ -287,6 +287,7 @@ class CrmFile extends Entity
             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             'application/vnd.openxmlformats-officedocument.wordprocessingml.template',
             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
             'application/vnd.ms-excel.sheet.binary.macroEnabled.12',
             'application/vnd.ms-excel',
             'application/vnd.ms-excel.sheet.macroEnabled.12'

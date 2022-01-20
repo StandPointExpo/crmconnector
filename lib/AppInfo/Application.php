@@ -2,6 +2,8 @@
 
 namespace OCA\CrmConnector\AppInfo;
 
+use OCA\CrmConnector\Controller\CrmFileApiController;
+use OCA\CrmConnector\Controller\FileReceive;
 use OCA\CrmConnector\Db\CrmToken;
 use OCA\CrmConnector\Service\CrmTokenService;
 use OCA\CrmConnector\Service\CrmUserService;
@@ -10,6 +12,7 @@ use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCP\AppFramework\IAppContainer;
+use Psr\Container\ContainerInterface;
 
 class Application extends App implements IBootstrap
 {
@@ -24,6 +27,11 @@ class Application extends App implements IBootstrap
     {
         parent::__construct(self::APP_ID, $urlParams);
         $this->container = $this->getContainer();
+
+        /**
+         * Controllers
+         */
+
     }
 
     public function register(IRegistrationContext $context): void

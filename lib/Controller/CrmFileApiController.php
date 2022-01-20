@@ -4,7 +4,6 @@ namespace OCA\CrmConnector\Controller;
 
 use OC\User\NoUserException;
 use OCA\Crmconnector\Db\CrmFile;
-use OC\IntegrityCheck\Exceptions\InvalidSignatureException;
 use OCA\CrmConnector\Db\CrmToken;
 use OCA\CrmConnector\Mapper\CrmFileMapper;
 use OCA\CrmConnector\Middleware\CrmUserMiddleware;
@@ -12,11 +11,8 @@ use OCA\CrmConnector\Migration\SeedsStep;
 use OCA\CrmConnector\Requests\CrmFileRequest;
 use OCA\CrmConnector\Service\CrmFileService;
 use OCA\CrmConnector\Traits\CrmFileTrait;
-use OCA\Mail\Http\AvatarDownloadResponse;
 use OCP\AppFramework\Http;
-use OCP\AppFramework\Http\DownloadResponse;
 use OCP\AppFramework\Http\FileDisplayResponse;
-use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\PublicShareController;
 use OCP\Files\IRootFolder;
 use OCP\Files\NotFoundException;
@@ -100,7 +96,6 @@ class CrmFileApiController extends PublicShareController
     )
     {
         $this->request = $request;
-        parent::__construct($appName, $request, $session);
         $this->middleware = $crmUserMiddleware;
         $this->user = $this->middleware->authUser($this->request);
         $this->appName = $appName;

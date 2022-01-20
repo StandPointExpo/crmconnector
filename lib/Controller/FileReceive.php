@@ -2,6 +2,7 @@
 
 namespace OCA\CrmConnector\Controller;
 
+use OC\Files\Node\Folder;
 use OCA\CrmConnector\Db\CrmFile;
 use OCA\CrmConnector\Traits\CrmFileTrait;
 use OCP\Files\IRootFolder;
@@ -55,7 +56,7 @@ class FileReceive
     /**
      * @var mixed
      */
-    private $projectFolder;
+    private $projectName;
     /**
      * @var mixed
      */
@@ -86,7 +87,7 @@ class FileReceive
             $this->request = $request;
 
             $this->uuid = $this->request->getParam('uuid');
-            $this->projectFolder = $this->request->getParam('project_name');
+            $this->projectName = $this->request->getParam('project_name');
             $this->foldersThree = json_decode($this->request->getParam('folders_tree'), true);
 
             $this->resumableIdentifier = '';
@@ -165,13 +166,9 @@ class FileReceive
     public function uploadedFileMove(): array
     {
         try {
-            $uploadedFilePath = "{$this->projectFolder}/{$this->foldersThreeString($this->foldersThree)}";
-            $activeFolder = $this->checkFoldersThree($uploadedFilePath);
-            if ($activeFolder) {
-                return $this->moveFile($activeFolder, $uploadedFilePath);
-            } else {
-                throw new \Exception('File in uploadedFileMove not upload');
-            }
+            $uploadedFilePath = "{$this->projectName}/{$this->foldersThreeString($this->foldersThree)}";
+            $activeFolder = $this->checkOrCreateFoldersThree($uploadedFilePath);
+            return $this->moveFile($activeFolder, $uploadedFilePath);
 
         } catch (\Throwable $exception) {
             throw new \Exception($exception->getMessage());
@@ -180,62 +177,86 @@ class FileReceive
 
     /**
      * @param string $uploadedFilePath
-     * @return $activeFolder - OC\\Files\\Node\\Folder
-     * @throws \Exception
+     * @return bool|null $activeFolder - OC\\Files\\Node\\Folder
+     * @throws NotPermittedException
+     * @throws \OCP\Files\NotFoundException
      */
-    public function checkFoldersThree($uploadedFilePath)
+    public function checkOrCreateFoldersThree(string $uploadedFilePath)
     {
-        $sourceDir = "{$this->uploadsDir}{$this->userFolder->getPath()}/" . CrmFile::CRM_STORAGE . "/{$uploadedFilePath}/";
-        if (!is_dir($sourceDir)) {
-            $activeFolder = $this->foldersCreate($uploadedFilePath);
-        } else {
-            $activeFolder = $this->getActiveFolder($this->userFolder, $uploadedFilePath);
+        $sourceDir = $this->sourceFilePath($uploadedFilePath);
+        if (!file_exists($sourceDir)) {
+            $this->foldersTreeCreate($uploadedFilePath);
         }
-        return $activeFolder;
+        var_dump($sourceDir);
+        die();
+        return $this->getActiveFolder($this->userFolder, $uploadedFilePath);
     }
 
     /**
      * Check and create projetcs folder and start recursive new folders three
      * @param string $uploadedFilePath
-     * @return $folder - OC\\Files\\Node\\Folder
+     * @return mixed $folder - OC\\Files\\Node\\Folder
      * @throws NotPermittedException
+     * @throws \Exception
      */
 
-    public function foldersCreate(string $uploadedFilePath)
+    public function foldersTreeCreate(string $uploadedFilePath)
     {
-        $projects = null;
-        try {
-            $projects = $this->userFolder->get(CrmFile::CRM_STORAGE);
-        } catch (\Throwable $exception) {
-            $projects = $this->userFolder->newFolder(CrmFile::CRM_STORAGE);//create folder
-        } catch (NotPermittedException $e) {
-            return false;
+        $projectsPath = $this->checkOrCreateProjectsStorage();
+        if (!$projectsPath) {
+            throw new \Exception('User project folder not created');
         }
+
         $foldersArr = explode('/', $uploadedFilePath);
-        return $this->folderCreateRecursive($projects, $foldersArr);
+        $parentFolder = $this->userFolder->get(CrmFile::CRM_STORAGE);
+        var_dump($parentFolder);
+        die();
+        return $this->folderCheckOrCreateRecursive($parentFolder, $foldersArr);
 
     }
 
     /**
-     * @param $parentFolder - is IRootFolder after get()
+     * @throws NotPermittedException
+     */
+    public function checkOrCreateProjectsStorage(): bool
+    {
+        if (!$this->userFolder->nodeExists(CrmFile::CRM_STORAGE)) {
+            $this->userFolder->newFolder(CrmFile::CRM_STORAGE);
+        }
+        return $this->userFolder->nodeExists(CrmFile::CRM_STORAGE);
+    }
+
+    /**
+     * @param string $parentFolder
      * @param array $foldersArr
      * @return mixed $folder - IRootFolder
+     * @throws NotPermittedException
      */
 
-    public function folderCreateRecursive($parentFolder, array $foldersArr)
+    public function folderCheckOrCreateRecursive($parentFolder, array $foldersArr)
     {
         $newFolder = array_shift($foldersArr);
-        try {
-            $folder = $parentFolder->get($newFolder);
-        } catch (\Throwable $exception) {
-            $folder = $parentFolder->newFolder($newFolder);
-        }
+
+        var_dump($parentFolder->isSubNode($newFolder));
+        die();
+        $folder = ($parentFolder->isSubNode($newFolder))
+            ? $this->userFolder->getFullPath($parentFolder . '/' . $newFolder)
+            : $this->createNewFolder($parentFolder . '/' . $newFolder);
 
         if (count($foldersArr) > 0) {
-            $folder = $this->folderCreateRecursive($folder, $foldersArr);
+            $folder = $this->folderCheckOrCreateRecursive($folder, $foldersArr);
         }
 
         return $folder;
+    }
+
+    /**
+     * @throws NotPermittedException
+     */
+    public function createNewFolder($path): string
+    {
+        $this->userFolder->newFolder($path);
+        return $this->userFolder->getFullPath($path);
     }
 
 
@@ -328,7 +349,7 @@ class FileReceive
     public function moveFile($activeFolder, $uploadedFilePath): array
     {
         try {
-            $sourceDir = "{$this->uploadsDir}{$this->userFolder->getPath()}/" . CrmFile::CRM_STORAGE . "/{$uploadedFilePath}/";
+            $sourceDir = $this->sourceFilePath($uploadedFilePath);
             $fileName = $this->setValidConv($this->createFilename($this->resumableFilename, $sourceDir));
             if (!copy("$this->temp_dir/$this->resumableFilename", "{$sourceDir}/$fileName")) {
                 throw new \Exception('Uploaded file not move');
@@ -378,6 +399,16 @@ class FileReceive
     public function setValidConv($string): string
     {
         return $string;
+    }
+
+    /**
+     * Converting a string to the valid encoding
+     * @param $uploadedFilePath
+     * @return string
+     */
+    public function sourceFilePath($uploadedFilePath): string
+    {
+        return "{$this->uploadsDir}{$this->userFolder->getPath()}/" . CrmFile::CRM_STORAGE . "/{$uploadedFilePath}/";
     }
 
     public function checkExistFileName($fileName, $sourceDir)
