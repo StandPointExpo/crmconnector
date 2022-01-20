@@ -110,6 +110,7 @@ class CrmFileApiShareController extends PublicShareController
     /**
      * @param string $uuid
      * @throws \OCP\DB\Exception
+     * @throws \OCP\Files\NotFoundException
      */
     public function createShare(string $uuid)
     {

@@ -16,7 +16,7 @@ trait CrmFileTrait
 
     public function getActiveFolder($userFolder, string $uploadedFilePath)
     {
-        $projectsPath = $userFolder->getFullPath(CrmFile::CRM_STORAGE);
+        $projectsPath = $userFolder->get(CrmFile::CRM_STORAGE);
         $foldersArr = explode('/', $uploadedFilePath);
         return $this->folderGetRecursive($projectsPath, $foldersArr);
 
@@ -31,9 +31,7 @@ trait CrmFileTrait
     public function folderGetRecursive($parentFolder, array $foldersArr)
     {
         $newFolder = array_shift($foldersArr);
-        var_dump($newFolder);
-        die();
-        $folder = $parentFolder->getFullPath($newFolder);
+        $folder = $parentFolder->get($newFolder);
 
         if (count($foldersArr) > 0) {
             $folder = $this->folderGetRecursive($folder, $foldersArr);

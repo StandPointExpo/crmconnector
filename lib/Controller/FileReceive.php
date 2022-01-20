@@ -2,13 +2,15 @@
 
 namespace OCA\CrmConnector\Controller;
 
-use OC\Files\Node\Folder;
+use OC\Files\AppData\AppData;
 use OCA\CrmConnector\Db\CrmFile;
+use OCA\CrmConnector\Mapper\CrmFileMapper;
 use OCA\CrmConnector\Traits\CrmFileTrait;
 use OCP\Files\IRootFolder;
 use OCP\Files\NotPermittedException;
 use OCP\IConfig;
 use OCP\IRequest;
+use function Amp\Iterator\discard;
 
 class FileReceive
 {
@@ -177,7 +179,7 @@ class FileReceive
 
     /**
      * @param string $uploadedFilePath
-     * @return bool|null $activeFolder - OC\\Files\\Node\\Folder
+     * @return $activeFolder - OC\\Files\\Node\\Folder
      * @throws NotPermittedException
      * @throws \OCP\Files\NotFoundException
      */
@@ -187,8 +189,6 @@ class FileReceive
         if (!file_exists($sourceDir)) {
             $this->foldersTreeCreate($uploadedFilePath);
         }
-        var_dump($sourceDir);
-        die();
         return $this->getActiveFolder($this->userFolder, $uploadedFilePath);
     }
 
@@ -209,8 +209,6 @@ class FileReceive
 
         $foldersArr = explode('/', $uploadedFilePath);
         $parentFolder = $this->userFolder->get(CrmFile::CRM_STORAGE);
-        var_dump($parentFolder);
-        die();
         return $this->folderCheckOrCreateRecursive($parentFolder, $foldersArr);
 
     }
@@ -227,21 +225,19 @@ class FileReceive
     }
 
     /**
-     * @param string $parentFolder
+     * @param $parentFolder - is IRootFolder after get()
      * @param array $foldersArr
      * @return mixed $folder - IRootFolder
-     * @throws NotPermittedException
      */
 
     public function folderCheckOrCreateRecursive($parentFolder, array $foldersArr)
     {
         $newFolder = array_shift($foldersArr);
-
-        var_dump($parentFolder->isSubNode($newFolder));
-        die();
-        $folder = ($parentFolder->isSubNode($newFolder))
-            ? $this->userFolder->getFullPath($parentFolder . '/' . $newFolder)
-            : $this->createNewFolder($parentFolder . '/' . $newFolder);
+        try {
+            $folder = $parentFolder->get($newFolder);
+        } catch (\Throwable $exception) {
+            $folder = $parentFolder->newFolder($newFolder);
+        }
 
         if (count($foldersArr) > 0) {
             $folder = $this->folderCheckOrCreateRecursive($folder, $foldersArr);
