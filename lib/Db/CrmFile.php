@@ -132,7 +132,15 @@ class CrmFile extends Entity
         'rpm'
     ];
 
-    const PROJECT_DOCUMENT_EXT = ['doc', 'docx', 'pdf', 'odt', 'zip', 'cdr', 'CDR'];
+    const PROJECT_DOCUMENT_EXT = [
+        'doc',
+        'docx',
+        'pdf',
+        'odt',
+        'zip',
+        'cdr',
+        'own',
+    ];
     const PROJECT_AUDIO_EXT = ['mp3', 'ogg', 'mpga'];
     const PROJECT_VIDEO_EXT = ['mp4', 'mpeg'];
 
